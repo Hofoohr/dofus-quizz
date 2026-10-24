@@ -1,0 +1,214 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    // Salons ouverts : inscrits par leur chef (et seulement lui) tant que la partie n'a pas commencé.
+    "publicRooms": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+        ".validate": "newData.hasChildren(['host', 'at'])",
+        "host": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20" },
+        "at": { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    // Statistiques de réussite par question (clé = empreinte du contenu de la question) : lisibles par tous, incrémentées par le chef en fin de partie.
+    "stats": {
+      ".read": "auth != null",
+      "$cle": {
+        ".write": "auth != null && newData.exists()",
+        ".validate": "newData.hasChildren(['n', 'ok']) && newData.child('n').isNumber() && newData.child('ok').isNumber() && newData.child('ok').val() <= newData.child('n').val() && newData.child('n').val() >= (data.exists() ? data.child('n').val() : 0) && newData.child('n').val() <= (data.exists() ? data.child('n').val() : 0) + 10 && newData.child('ok').val() >= (data.exists() ? data.child('ok').val() : 0) && newData.child('ok').val() - (data.exists() ? data.child('ok').val() : 0) <= newData.child('n').val() - (data.exists() ? data.child('n').val() : 0)",
+        "n": { ".validate": "newData.isNumber()" },
+        "ok": { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "rooms": {
+      "$code": {
+        "$other": { ".validate": false },
+
+        // Marque « statistiques déjà enregistrées pour cette partie » (écrite par le chef).
+        "statsDone": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          ".validate": "newData.isBoolean()"
+        },
+
+        "meta": {
+          ".read": "auth != null",
+          // Création : le créateur devient chef. Ensuite, seul le chef modifie.
+          ".write": "auth != null && ((!data.exists() && newData.child('hostUid').val() === auth.uid) || data.child('hostUid').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['hostUid', 'phase'])",
+          "hostUid": { ".validate": "newData.isString() && (!data.exists() || data.val() === newData.val())" },
+          "phase": { ".validate": "newData.isString() && (newData.val() === 'lobby' || newData.val() === 'questions' || newData.val() === 'geo' || newData.val() === 'correction' || newData.val() === 'results')" },
+          // Jeu choisi par le chef : seul le GeoGuessr est marqué (absent = quizz).
+          "game": { ".validate": "newData.isString() && (newData.val() === 'quizz' || newData.val() === 'geo')" },
+          // Salon visible dans la liste des salons ouverts (publicRooms).
+          "public": { ".validate": "newData.isBoolean()" },
+          "startAt": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        },
+
+        "players": {
+          ".read": "auth != null",
+          "$uid": {
+            // Chacun gère son propre joueur ; on ne peut s'inscrire que dans le salon d'attente.
+            ".write": "auth != null && ((auth.uid === $uid && !root.child('rooms/' + $code + '/bans/' + $uid).exists() && (!newData.exists() || data.exists() || root.child('rooms/' + $code + '/meta/phase').val() === 'lobby')) || (!newData.exists() && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid && root.child('rooms/' + $code + '/meta/phase').val() === 'lobby'))",
+            ".validate": "newData.hasChildren(['name'])",
+            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20" },
+            "$other": { ".validate": false }
+          }
+        },
+
+        // Joueurs exclus par le chef dans la salle d'attente (bans/uid = true) : ils ne peuvent plus se réinscrire.
+        "bans": {
+          ".read": "auth != null",
+          "$uid": {
+            ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+            ".validate": "newData.isBoolean()"
+          }
+        },
+
+        "questions": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          "$i": {
+            ".validate": "newData.hasChildren(['id', 'cat', 'q', 'pts', 'temps'])",
+            "id": { ".validate": "newData.isString()" },
+            "cat": { ".validate": "newData.isString() && newData.val().length <= 100" },
+            "q": { ".validate": "newData.isString() && newData.val().length <= 500" },
+            "pts": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+            "temps": { ".validate": "newData.isNumber() && newData.val() >= 5 && newData.val() <= 300" },
+            // Questions à plusieurs champs : seuls les intitulés sont publiés, jamais les réponses.
+            "champs": { "$k": { ".validate": "newData.isString() && newData.val().length <= 100" } },
+            // Mini-jeu « Confusion horaire » : la scène (positions, vie, écriture de la confusion), identique pour tous les joueurs.
+            "scene": {
+              "n": { ".validate": "newData.isNumber() && newData.val() >= 5 && newData.val() <= 25" },
+              "e": { "$k": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 24" } },
+              "c": { "$k": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 24" } },
+              "conf": { ".validate": "newData.isString() && newData.val().length <= 10" },
+              "pv": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+              "aff": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+              "$other": { ".validate": false }
+            },
+            // Pas de champ "a" : la réponse attendue n'est jamais publiée ici.
+            "$other": { ".validate": false }
+          }
+        },
+
+        "answers": {
+          // Le chef efface les réponses quand il relance une partie dans le même salon.
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          "$i": {
+            // Les réponses des autres ne sont lisibles qu'une fois les questions terminées.
+            ".read": "auth != null && root.child('rooms/' + $code + '/meta/phase').val() !== 'questions'",
+            "$uid": {
+              ".read": "auth != null && auth.uid === $uid",
+              ".write": "auth != null && auth.uid === $uid && root.child('rooms/' + $code + '/meta/phase').val() === 'questions' && root.child('rooms/' + $code + '/players/' + auth.uid).exists()",
+              // Réponse simple (texte) ou, pour une question à plusieurs champs, un texte par champ.
+              ".validate": "(newData.isString() && newData.val().length <= 200) || newData.hasChildren()",
+              "$f": { ".validate": "newData.isString() && newData.val().length <= 200" }
+            }
+          }
+        },
+
+        "skips": {
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          // Le chef peut terminer la question en cours : on enregistre l'heure à laquelle il l'a passée.
+          ".read": "auth != null",
+          "$i": {
+            ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+            ".validate": "newData.isNumber()"
+          }
+        },
+
+        // « Prêt » : un participant prévient le chef qu'il a fini la question (ready/numéro de question/uid = true).
+        "ready": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          "$i": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && root.child('rooms/' + $code + '/meta/phase').val() === 'questions' && root.child('rooms/' + $code + '/players/' + auth.uid).exists()",
+              ".validate": "newData.isBoolean()"
+            }
+          }
+        },
+
+        // Chat du salon : chaque message est écrit une seule fois par son auteur.
+        "chat": {
+          ".read": "auth != null",
+          "$id": {
+            ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && root.child('rooms/' + $code + '/players/' + auth.uid).exists()",
+            ".validate": "newData.hasChildren(['uid', 'name', 'text', 'at'])",
+            "uid": { ".validate": "newData.isString()" },
+            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20" },
+            "text": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200" },
+            "at": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+
+        "expected": {
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          "$i": {
+            ".read": "auth != null",
+            ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+            // La réponse attendue peut être longue (ex. : texte d'un passif de Dofus) ; seul le chef l'écrit.
+            ".validate": "(newData.isString() && newData.val().length <= 1000) || newData.hasChildren()",
+            "$f": { ".validate": "newData.isString() && newData.val().length <= 1000" }
+          }
+        },
+
+        "correction": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          "index": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        },
+
+        "verdicts": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          "$i": {
+            "$uid": {
+              // Un verdict global, ou un verdict par champ pour les questions à plusieurs champs.
+              ".validate": "newData.isBoolean() || newData.hasChildren()",
+              "$f": { ".validate": "newData.isBoolean()" }
+            }
+          }
+        },
+
+        // --- GeoGuessr Dofus ---
+        "geo": {
+          // Configuration de la partie (durée max d'une manche, délai après le 1er guess, cartes de départ), écrite par le chef.
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          "max": { ".validate": "newData.isNumber() && newData.val() >= 30 && newData.val() <= 1800" },
+          "grace": { ".validate": "newData.isNumber() && newData.val() >= 5 && newData.val() <= 300" },
+          // Mode « no move » : les joueurs ne peuvent pas se déplacer.
+          "nomove": { ".validate": "newData.isBoolean()" },
+          "rounds": { "$i": { ".validate": "newData.isString() && newData.val().length <= 20" } },
+          "$other": { ".validate": false }
+        },
+
+        "guesses": {
+          // Le chef efface les guess quand il relance une partie dans le même salon.
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          // Guess de chaque joueur (coordonnées x, y de la carte de départ + heure) : définitif, une seule écriture par manche.
+          ".read": "auth != null",
+          "$i": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('rooms/' + $code + '/meta/phase').val() === 'geo' && root.child('rooms/' + $code + '/players/' + auth.uid).exists()",
+              ".validate": "newData.hasChildren(['x', 'y', 'at'])",
+              "x": { ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200" },
+              "y": { ".validate": "newData.isNumber() && newData.val() >= -200 && newData.val() <= 200" },
+              "at": { ".validate": "newData.isNumber()" },
+              "$other": { ".validate": false }
+            }
+          }
+        }
+      }
+    }
+  }
+}

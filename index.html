@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quizz Culture &amp; GeoGuessr Dofus</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main id="app">
+
+  <section id="screen-home" class="screen active">
+    <h1>Quizz Culture</h1>
+    <p class="lead">Joue entre amis : quizz de culture générale ou GeoGuessr Dofus, au choix du chef du salon.</p>
+    <label class="field">Ton pseudo
+      <input id="pseudo" maxlength="20" placeholder="Pseudo" autocomplete="off">
+    </label>
+    <label class="chk pub"><input type="checkbox" id="make-public" checked> Salon public</label>
+    <button id="create" class="btn" disabled>Créer un salon</button>
+    <div class="or">ou</div>
+    <div class="join">
+      <input id="code" maxlength="4" placeholder="CODE" autocomplete="off">
+      <button id="join" class="btn" disabled>Rejoindre</button>
+    </div>
+    <p class="stats-link"><a href="stats.html">Statistiques</a></p>
+    <div id="open-rooms" hidden>
+      <h2>Salons ouverts</h2>
+      <ul id="open-list"></ul>
+    </div>
+  </section>
+
+  <section id="screen-lobby" class="screen">
+    <p class="lead">Code du salon</p>
+    <div id="room-code" class="code"></div>
+    <h2>Joueurs <small id="count"></small></h2>
+    <ul id="players"></ul>
+    <div id="host-box" hidden>
+      <fieldset><legend>Jeu</legend>
+        <label class="chk"><input type="radio" name="game" value="quizz" checked> 🧠 Quizz culture</label>
+        <label class="chk"><input type="radio" name="game" value="geo"> 🗺️ GeoGuessr Dofus</label>
+      </fieldset>
+      <div id="quizz-opts">
+        <label class="field">Nombre de questions
+          <select id="nb"><option>5</option><option selected>10</option><option>20</option><option>50</option><option>180</option></select>
+        </label>
+        <fieldset><legend>Catégories</legend><div id="cats"></div></fieldset>
+      </div>
+      <div id="geo-opts" hidden>
+        <label class="field">Nombre de manches
+          <select id="geo-nb"><option>3</option><option selected>5</option><option>10</option></select>
+        </label>
+        <label class="field">Durée max d'une manche
+          <select id="geo-max"><option value="60">1 min</option><option value="120" selected>2 min</option><option value="180">3 min</option><option value="300">5 min</option><option value="600">10 min</option></select>
+        </label>
+        <label class="field">Temps pour répondre après le 1er guess
+          <select id="geo-grace"><option value="5">5 s</option><option value="10">10 s</option><option value="15" selected>15 s</option><option value="20">20 s</option><option value="25">25 s</option><option value="30">30 s</option></select>
+        </label>
+        <label class="chk"><input type="checkbox" id="geo-nomove"> 🚫 Mode « no move » (pas de déplacement)</label>
+      </div>
+      <button id="start" class="btn">Lancer la partie</button>
+    </div>
+    <p id="wait-msg" class="lead" hidden>En attente du lancement par le chef du salon…</p>
+    <button id="leave" class="btn ghost">Quitter le salon</button>
+  </section>
+
+  <section id="screen-play" class="screen">
+    <div id="p-live" hidden>
+      <div class="top"><span id="p-progress"></span><span id="p-secs"></span></div>
+      <div class="timer"><i id="p-fill"></i></div>
+      <div class="meta"><span id="p-cat"></span><span id="p-pts"></span></div>
+      <h2 id="p-text"></h2>
+      <img id="p-img" class="carte" alt="Carte à identifier" hidden>
+      <div id="p-pixelbox" hidden>
+        <canvas id="p-pixel" width="384" height="384" class="pixel"></canvas>
+        <p id="p-pixelmsg" class="hint"></p>
+      </div>
+      <input id="p-answer" placeholder="Ta réponse…" autocomplete="off" maxlength="200">
+      <button id="p-try" class="btn" hidden>Proposer ce nom</button>
+      <div id="p-fields" hidden></div>
+      <div id="p-rush" class="rush" hidden><b>⚡ Question de rapidité</b><span>Confusion du Comte Harebourg</span><i id="p-rushcount"></i></div>
+      <div id="p-scenebox" hidden>
+        <div id="p-conf"></div>
+        <div class="scenewrap"><canvas id="p-scene" class="scene"></canvas></div>
+      </div>
+      <div id="p-mapbox" hidden>
+        <div class="zoombar"><small id="p-maphint">Clique sur la carte du monde pour placer ton repère (x vers l'est, y vers le sud). <b>Le plus proche gagne les points !</b></small><small id="p-hover"></small></div>
+        <div id="p-map" class="monde"></div>
+        <p id="p-pos" class="hint"></p>
+      </div>
+      <button id="p-ready" class="btn ghost" hidden>✋ Prêt à passer à la question suivante</button>
+      <p id="p-readyinfo" class="hint" hidden></p>
+      <button id="p-skip" class="btn ghost" hidden>Passer la question</button>
+      <p class="hint">Ta réponse est enregistrée automatiquement : ce qui est écrit quand le temps arrive à 0 est retenu.</p>
+    </div>
+    <div id="p-wait" hidden>
+      <p id="p-wait-text" class="lead"></p>
+      <div id="p-count" class="code"></div>
+    </div>
+    <div id="p-end" hidden>
+      <h2>Questions terminées !</h2>
+      <p class="lead">En attente de la correction…</p>
+    </div>
+    <button class="btn ghost leave-game">Quitter la partie</button>
+  </section>
+
+  <section id="screen-correction" class="screen">
+    <div class="top"><span id="c-progress"></span><span id="c-pts"></span></div>
+    <p id="c-prep" class="lead">Préparation de la correction…</p>
+    <div id="c-body" hidden>
+      <div class="meta"><span id="c-cat"></span></div>
+      <h2 id="c-text"></h2>
+      <img id="c-img" class="carte" alt="Carte à identifier" hidden>
+      <img id="c-sprite" class="sprite" alt="Monstre à identifier" hidden>
+      <div class="expected"><small>Réponse attendue</small><b id="c-expected"></b></div>
+      <div id="c-scenebox" hidden><div id="c-conf"></div><p id="c-scenetxt" class="hint"></p><div class="scenewrap"><canvas id="c-scene" class="scene"></canvas></div></div>
+      <div id="c-mapbox" hidden><p id="c-pile" class="pile" hidden></p><div id="c-map" class="monde"></div></div>
+      <ul id="c-list"></ul>
+      <div id="c-host" class="btns" hidden>
+        <button id="c-prev" class="btn ghost">← Précédente</button>
+        <button id="c-next" class="btn">Question suivante →</button>
+      </div>
+      <p id="c-wait" class="lead" hidden>Le chef du salon fait défiler la correction…</p>
+    </div>
+    <button class="btn ghost leave-game">Quitter la partie</button>
+  </section>
+
+  <section id="screen-results" class="screen">
+    <h1>Résultats</h1>
+    <ol id="r-rank"></ol>
+    <button id="r-home" class="btn" hidden>🔁 Rejouer avec les mêmes joueurs</button>
+    <p id="r-wait" class="lead" hidden>En attente du chef du salon pour rejouer…</p>
+    <button class="btn ghost leave-game">Quitter la partie</button>
+  </section>
+
+  <section id="screen-geo" class="screen">
+    <div id="g-wait" hidden>
+      <p id="g-wait-text" class="lead"></p>
+      <div id="g-count" class="code"></div>
+    </div>
+    <div id="g-live" hidden>
+      <div class="top"><span id="g-progress"></span><span id="g-secs"></span></div>
+      <div class="timer"><i id="g-fill"></i></div>
+      <p id="g-alert" class="alert" hidden></p>
+      <div id="g-tabs" class="tabs" hidden>
+        <button id="g-tab-explore" class="btn tab on">🧭 Explorer</button>
+        <button id="g-tab-guess" class="btn tab">📍 Deviner</button>
+      </div>
+
+      <div id="g-reveal" hidden>
+        <div class="expected"><small>La carte de départ était en</small><b id="g-answer"></b></div>
+        <ul id="g-rows"></ul>
+      </div>
+
+      <div id="g-explore">
+        <div id="g-shot" class="shot">
+          <img id="g-img" alt="Carte de Dofus" draggable="false">
+          <p id="g-noimg" class="noimg" hidden>Image indisponible : tu peux quand même te déplacer.</p>
+          <button id="g-nav-n" class="nav n" aria-label="Carte au nord">▲</button>
+          <button id="g-nav-s" class="nav s" aria-label="Carte au sud">▼</button>
+          <button id="g-nav-w" class="nav w" aria-label="Carte à l'ouest">◀</button>
+          <button id="g-nav-e" class="nav e" aria-label="Carte à l'est">▶</button>
+        </div>
+        <div id="g-navpad" class="steps">
+          <span id="g-offset"></span>
+          <button id="g-home" class="btn ghost">↩ Départ</button>
+        </div>
+        <p id="g-hint" class="hint">Déplace-toi de carte en carte (boutons ou flèches du clavier), puis devine les coordonnées de la carte <b>de départ</b>.</p>
+      </div>
+
+      <div id="g-guessbox" hidden>
+        <div class="zoombar"><small id="g-maphint">Clique sur la carte du monde pour placer ton repère (x vers l'est, y vers le sud).</small><small id="g-hover"></small></div>
+        <div id="g-map"></div>
+        <div id="g-form" class="coords">
+          <label>x <input id="g-x" type="number" inputmode="numeric" placeholder="x"></label>
+          <label>y <input id="g-y" type="number" inputmode="numeric" placeholder="y"></label>
+          <button id="g-submit" class="btn" disabled>Valider mon guess</button>
+        </div>
+      </div>
+
+    </div>
+    <button class="btn ghost leave-game">Quitter la partie</button>
+  </section>
+
+  <section id="screen-georesults" class="screen">
+    <h1>Résultats</h1>
+    <ol id="gr-rank"></ol>
+    <button id="gr-home" class="btn" hidden>🔁 Rejouer avec les mêmes joueurs</button>
+    <p id="gr-wait" class="lead" hidden>En attente du chef du salon pour rejouer…</p>
+    <button class="btn ghost leave-game">Quitter la partie</button>
+  </section>
+
+</main>
+<footer id="legal">Projet de fans, non affilié à Ankama. Dofus est une marque d'Ankama Games ; illustrations et données © Ankama, via <a href="https://dofusdb.fr" target="_blank" rel="noopener">DofusDB</a>.</footer>
+<div id="chat" hidden>
+  <div id="chat-panel" hidden>
+    <div class="chat-top"><b>💬 Chat du salon</b><button id="chat-close" class="chat-x" aria-label="Fermer le chat">✕</button></div>
+    <div id="chat-msgs"></div>
+    <form id="chat-form"><input id="chat-text" maxlength="200" placeholder="Écris un message…" autocomplete="off"><button class="btn">Envoyer</button></form>
+  </div>
+  <button id="chat-btn" aria-label="Ouvrir le chat">💬<span id="chat-badge" hidden></span></button>
+</div>
+<div id="error" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script type="module" src="js/lobby.js"></script>
+</body>
+</html>
