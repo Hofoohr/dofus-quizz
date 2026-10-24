@@ -21,8 +21,3 @@ Il est conseillé de restreindre la clé d'API du projet aux domaines du site da
 
 ## Banque de questions
 Les questions sont dans `js/questions/` ; la plupart sont générées par les scripts de `tools/` (Python) à partir de sources publiques. Les réponses sont donc lisibles dans le code : ce jeu est fait pour s'amuser, pas pour un concours.
-
-## Crédits et mentions légales
-Projet de fans, **non affilié à Ankama**. Dofus est une marque d'Ankama Games. Les noms, illustrations, cartes et données du jeu appartiennent à Ankama.
-
-Sources des données et images : [DofusDB](https://dofusdb.fr), [Dofus sur JeuxOnLine](https://dofus.jeuxonline.info) et [Gamosaurus](https://gamosaurus.com). Merci à leurs auteurs.
