@@ -3,6 +3,7 @@
 // aucun joueur n'a besoin d'écrire l'avancement de la partie (seuls les guess et la fin de partie sont écrits).
 import { db, ref, get, set, update, onValue, serverNow, serverTimestamp, clockReady } from "./firebase.js";
 import { MAPS } from "./geo-maps.js";
+import { enregistrerPartie } from "./histo.js";
 
 const COUNTDOWN_MS = 5000;   // compte à rebours avant la première manche
 const REVEAL_MS = 8000;      // temps d'affichage de la solution après chaque manche
@@ -315,11 +316,16 @@ function renderReveal() {
     <b>${r.total}</b></li>`).join('');
 }
 
+let histoEnvoye = false;
 function renderResults() {
   const t = totals(cfg.rounds.length - 1);
   const rows = Object.keys(players).map(id => ({ id, name: players[id].name, score: t[id] }))
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
   const max = cfg.rounds.length * MAX_POINTS;
+  if (ctx.isHost && !histoEnvoye) {   // historique des parties (histo.js) : une fois, par le chef
+    histoEnvoye = true;
+    enregistrerPartie(ctx.code, { game: 'geo', nb: cfg.rounds.length, players: rows.map(r => ({ name: r.name, score: r.score, max })) });
+  }
   $('gr-rank').innerHTML = rows.map(r => {
     const rank = 1 + rows.filter(x => x.score > r.score).length;
     const medal = ['🥇', '🥈', '🥉'][rank - 1] || rank + '.';
@@ -378,6 +384,6 @@ export function stop() {
   running = false;
   clearInterval(timer); timer = null;
   offs.forEach(u => u()); offs = [];
-  cfg = null; players = {}; guesses = {}; ctx = null; ready = { p: false, g: false };
+  cfg = null; players = {}; guesses = {}; ctx = null; ready = { p: false, g: false }; histoEnvoye = false;
   st = { i: -1, mode: 'count' };
 }

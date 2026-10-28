@@ -24,9 +24,39 @@
         "$other": { ".validate": false }
       }
     },
+    // Historique des parties : une entrée par partie terminée (pseudos et points), écrite par le chef du salon correspondant.
+    "history": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "auth != null && !data.exists() && newData.child('code').isString() && root.child('rooms/' + newData.child('code').val() + '/meta/hostUid').val() === auth.uid",
+        ".validate": "newData.hasChildren(['code', 'at', 'game', 'nb', 'players'])",
+        "code": { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "at": { ".validate": "newData.isNumber()" },
+        "game": { ".validate": "newData.isString() && (newData.val() === 'quizz' || newData.val() === 'geo')" },
+        "nb": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 1000" },
+        "cats": { "$i": { ".validate": "newData.isString() && newData.val().length <= 100" } },
+        "players": {
+          "$i": {
+            ".validate": "newData.hasChildren(['name', 'score', 'max'])",
+            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20" },
+            "score": { ".validate": "newData.isNumber()" },
+            "max": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
     "rooms": {
       "$code": {
         "$other": { ".validate": false },
+
+        // Marque « historique déjà enregistré pour cette partie » (écrite par le chef).
+        "historyDone": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid",
+          ".validate": "newData.isBoolean()"
+        },
 
         // Marque « statistiques déjà enregistrées pour cette partie » (écrite par le chef).
         "statsDone": {

@@ -3,6 +3,7 @@ import { QUESTIONS } from "./questions.js";
 import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
 import { classerParTemps } from "./devine.js";
+import { enregistrerPartie } from "./histo.js";
 import { creerScene, caseAViser, lireCase, classementRapide, infosScene, lireScene, PLAGE_VIE, COULEURS } from "./confusion.js";
 
 const $ = id => document.getElementById(id);
@@ -230,6 +231,10 @@ async function enregistrerStats() {
       }
       return n ? { cle: bk.cle, n, ok } : null;
     }));
+    // historique de la partie : pseudos et points de chacun (calculés ici, une fois les réponses chargées)
+    const fin = calcScores(verr);
+    enregistrerPartie(ctx.code, { game: 'quizz', nb: list.length, cats: [...new Set(list.map(q => q.cat))],
+      players: fin.rows.map(r => ({ name: r.name, score: r.score, max: fin.max })) });
     // un seul enregistrement par partie (rooms/<code>/statsDone) : si le chef recharge la page, on ne compte pas deux fois
     const marque = await runTransaction(path('statsDone'), cur => (cur ? undefined : true));
     if (!marque.committed) return;
@@ -238,20 +243,26 @@ async function enregistrerStats() {
   } catch (e) { console.warn('Statistiques non enregistrées :', e); }
 }
 
-function renderResults() {
-  document.body.classList.remove('large');
-  enregistrerStats();
+// Points de chaque joueur sur toute la partie. verr : verdicts du chef (par numéro de question). Retourne { max, rows } classés.
+function calcScores(verr) {
   const max = list.reduce((s, q) => s + q.pts, 0);
   const rows = Object.keys(players).map(id => {
     let score = 0;
     list.forEach((q, j) => {
       if (isAuto(q)) { score += pointsOf(j, id); return; }
       const n = fieldsOf(q) ? fieldsOf(q).length : 1;
-      score += q.pts * (result(q, (verdicts[j] || {})[id]) || 0) / n;   // plusieurs champs : points au prorata des champs justes
-      if (autoChamp(q) >= 0) score += coordRank(j)[id].points;           // + points de la distance (champ « coordonnées »)
+      score += q.pts * (result(q, (verr[j] || {})[id]) || 0) / n;   // plusieurs champs : points au prorata des champs justes
+      if (autoChamp(q) >= 0) score += coordRank(j)[id].points;      // + points de la distance (champ « coordonnées »)
     });
     return { id, name: players[id].name, score: Math.round(score * 10) / 10 };
   }).sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  return { max, rows };
+}
+
+function renderResults() {
+  document.body.classList.remove('large');
+  enregistrerStats();
+  const { max, rows } = calcScores(verdicts);
   $('r-rank').innerHTML = rows.map(r => {
     const rank = 1 + rows.filter(x => x.score > r.score).length;
     const medal = ['🥇', '🥈', '🥉'][rank - 1] || rank + '.';

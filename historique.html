@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historique des parties – Quizz Culture &amp; GeoGuessr Dofus</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main id="app" class="wide">
+  <section class="screen active">
+    <h1>Historique des parties</h1>
+    <p class="lead">Les dernières parties terminées : qui a joué et combien de points chacun a marqué.</p>
+    <div class="s-filtres">
+      <input id="h-q" placeholder="Rechercher un joueur…" autocomplete="off">
+      <select id="h-jeu"><option value="">Tous les jeux</option><option value="quizz">Quizz</option><option value="geo">GeoGuessr</option></select>
+    </div>
+    <p id="h-etat" class="hint"></p>
+    <div id="h-liste"></div>
+    <p class="hint"><a href="index.html">← Retour au quizz</a></p>
+  </section>
+</main>
+<script type="module" src="js/historique.js"></script>
+</body>
+</html>
