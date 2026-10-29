@@ -2,7 +2,7 @@ import { db, ref, get, set, update, onValue, runTransaction } from "./firebase.j
 import { QUESTIONS } from "./questions.js";
 import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
-import { classerParTemps } from "./devine.js";
+import { classerParTemps, contient } from "./devine.js";
 import { enregistrerPartie } from "./histo.js";
 import { corrigerSort } from "./autosort.js";
 import { creerScene, caseAViser, lireCase, classementRapide, infosScene, lireScene, PLAGE_VIE, COULEURS } from "./confusion.js";
@@ -87,7 +87,7 @@ function renderCorrection() {
     $('c-expected').innerHTML = fields.map((l, k) =>
       `<span class="exp-line">${esc(l)} : <b>${esc(expected && expected[k] != null ? expected[k] : '…')}</b></span>`).join('');
   } else $('c-expected').textContent = expected ?? '…';
-  $('c-autonote').hidden = bankOf(q).auto !== 'sort';
+  $('c-autonote').hidden = !(bankOf(q).auto === 'sort' || bankOf(q).verif);
   $('c-sprite').hidden = !isPixel(q);
   if (isPixel(q)) {
     const bk = bankOf(q), res = pixelOf(index);
@@ -280,14 +280,23 @@ let autoFait = {}, answersPrets = false, verdictsPrets = false;
 function autoCorriger() {
   if (!ctx || !ctx.isHost || index === null || !answersPrets || !verdictsPrets || !expected || autoFait[index]) return;
   const q = list[index];
-  if (!q || bankOf(q).auto !== 'sort') return;
+  const bk = q && bankOf(q);
+  if (!bk || (bk.auto !== 'sort' && !bk.verif)) return;
   autoFait[index] = true;
   const maj = {};
-  Object.keys(players).forEach(id => (fieldsOf(q) || []).forEach((_, k) => {
+  if (bk.verif && !fieldsOf(q)) {   // question simple « le nom de l'item » : verdict global
+    Object.keys(players).forEach(id => {
+      const deja = (verdicts[index] || {})[id];
+      if (deja === true || deja === false) return;
+      maj[`${index}/${id}`] = contient(typeof answers[id] === 'string' ? answers[id] : '', expected);
+    });
+  } else Object.keys(players).forEach(id => (fieldsOf(q) || []).forEach((_, k) => {
     const deja = ((verdicts[index] || {})[id] || {})[k];
     if (deja === true || deja === false) return;
-    const a = answers[id], r = corrigerSort(k, a && typeof a === 'object' ? a[k] : null, expected[k]);
-    if (r !== undefined) maj[`${index}/${id}/${k}`] = r;   // undefined : réponse attendue trop particulière, le chef juge
+    const a = answers[id], saisie = a && typeof a === 'object' ? a[k] : null;
+    const r = bk.auto === 'sort' ? corrigerSort(k, saisie, expected[k])
+      : bk.verif && bk.verif[k] === 'contient' ? contient(saisie, expected[k]) : undefined;   // undefined : le chef juge (champ descriptif, réponse trop particulière)
+    if (r !== undefined) maj[`${index}/${id}/${k}`] = r;
   }));
   if (Object.keys(maj).length) update(path('verdicts'), maj).catch(console.error);
 }

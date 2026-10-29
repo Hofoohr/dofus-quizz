@@ -17,6 +17,8 @@ function uneFauteAuPlus(a, b) {
   return ra.length >= 2 && rb.length >= 2 && ra[0] === rb[1] && ra[1] === rb[0] && ra.slice(2) === rb.slice(2);   // deux lettres inversées
 }
 // Une faute de frappe d'une lettre est acceptée, sauf pour les noms de 3 lettres ou moins (trop de risques de confusion).
+// La réponse du joueur contient-elle la bonne réponse (sans majuscules, accents ni ponctuation) ? « poukachi » est dans « la légende Poukachi ».
+export const contient = (saisie, attendu) => { const t = normaliser(attendu); return t !== '' && normaliser(saisie).includes(t); };
 export const estBonNom = (nom, saisie) => {
   const n = normaliser(saisie), t = normaliser(nom);
   return n !== '' && (n === t || (t.length >= 4 && uneFauteAuPlus(n, t)));

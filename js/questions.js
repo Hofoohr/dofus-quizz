@@ -10,6 +10,7 @@
 // « classement: true » : pas de correction par le chef ; les joueurs sont classés selon la distance de leur réponse (champ « coord »), voir js/carte.js.
 // « scene » : mini-jeu « Confusion horaire » (js/confusion.js) : le joueur clique une case de la grille, corrigée automatiquement.
 // « sprite » + « nom » : « Monstre pixelisé » (js/devine.js) : image qui se précise, le joueur tape le nom exact, corrigé automatiquement.
+// Un 6e élément (simple) ou « verif » (champs) : correction automatique par « contient » (la réponse du joueur doit contenir la bonne réponse).
 // Ne change pas l'ordre des lignes existantes : l'identifiant d'une question en dépend.
 // Banque publique : les réponses sont visibles par tous les visiteurs du site.
 import quetes from "./questions/quetes.js";
@@ -41,10 +42,10 @@ export const QUESTIONS = CATEGORIES.flatMap((c, ci) =>
   c.items.map((it, i) => {
     const id = `c${ci}q${i}`;
     let o;
-    if (Array.isArray(it)) { const [q, a, pts, temps, groupe] = it; o = { id, type: "simple", cat: c.cat, q, a, pts, temps, groupe }; }
+    if (Array.isArray(it)) { const [q, a, pts, temps, groupe, verif] = it; o = { id, type: "simple", cat: c.cat, q, a, pts, temps, groupe, verif }; }
     else if (it.sprite) o = { id, type: "pixel", cat: c.cat, q: it.q, a: it.nom, nom: it.nom, sprite: it.sprite, pts: it.pts, temps: it.temps };
     else if (it.scene) o = { id, type: "clic", cat: c.cat, q: it.q, a: caseAViser(it.scene).join(","), pts: it.pts, temps: it.temps, scene: it.scene };
-    else o = { id, type: "multi", cat: c.cat, q: it.q, champs: it.champs.map(f => f[0]), a: it.champs.map(f => f[1]), pts: it.pts, temps: it.temps, img: it.img, coord: it.coord, classement: it.classement };
+    else o = { id, type: "multi", cat: c.cat, q: it.q, champs: it.champs.map(f => f[0]), a: it.champs.map(f => f[1]), pts: it.pts, temps: it.temps, img: it.img, coord: it.coord, classement: it.classement, verif: it.verif };
     if (c.auto) o.auto = c.auto;   // catégorie corrigée automatiquement (ex. : « sort »)
     o.cle = empreinte([c.cat, o.q, [].concat(o.a).join('|'), o.img || o.sprite || (o.scene ? JSON.stringify(o.scene) : '')].join('#'));   // identifiant stable pour les statistiques
     return o;
