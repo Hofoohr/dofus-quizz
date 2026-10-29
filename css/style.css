@@ -188,3 +188,4 @@ body.large #app{max-width:980px}
 .cat input:focus-visible + span{outline:2px solid var(--text);outline-offset:2px}
 input[type=radio],input[type=checkbox]{width:auto;margin:0 .4rem 0 0;vertical-align:middle}
 .cat input{margin:0}
+.emoji{height:1.4em;width:auto;vertical-align:-.3em;margin-right:.15rem}
