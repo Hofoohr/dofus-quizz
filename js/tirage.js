@@ -25,11 +25,11 @@ export function melange(questions) {
 
 // Répartition des questions entre les catégories pour une partie de 180 questions (la somme des poids).
 // Pour une partie de n questions, la catégorie c reçoit n × poids(c) / somme des poids questions : à 180 on retrouve exactement ces nombres,
-// à 20 on a par exemple 20 × 5 / 180 = 0,6 question d'« Items ». Les décimales sont arrondies AU HASARD : une catégorie à 0,7
+// à 20 on a par exemple 20 × 5 / 180 = 0,6 question de « Dofus ». Les décimales sont arrondies AU HASARD : une catégorie à 0,7
 // a 70 % de chances d'avoir 1 question, sinon 0 (la partie compte toujours n questions au total).
 // Une catégorie absente de cette liste prend le poids POIDS_PAR_DEFAUT.
 export const POIDS = {
-  'Sort de classe': 5, 'Panoplie': 20, 'Items': 5, 'Légendaire': 10, 'Succès': 20,
+  'Sort de classe': 5, 'Panoplie': 20, 'Dofus': 5, 'Légendaire': 10, 'Succès': 20,
   'Quêtes': 20, 'Donjons': 20, 'Métiers': 20, 'Cartes': 20, 'GeoGuessr': 20, 'Confusion horaire': 10, 'Monstre pixelisé': 10,
 };
 export const POIDS_PAR_DEFAUT = 10;

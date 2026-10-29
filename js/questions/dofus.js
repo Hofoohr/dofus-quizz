@@ -1,6 +1,6 @@
 // Une question par Dofus : bonus fixes et passif.
 export default {
-  cat: "Items",
+  cat: "Dofus",
   items: [
     {"q": "Quels sont les bonus fixes et le passif du « Dofus Pourpre » ?", "champs": [["Bonus fixes", "+80 Puissance"], ["Passif (le plus précis gagne les points)", "Pourpre Profond : • Lorsque le porteur est attaqué, il gagne 1% de dommages finaux pendant 2 tours (cumulable 10 fois)."]], "pts": 3, "temps": 60},
     {"q": "Quels sont les bonus fixes et le passif du « Dofus Émeraude » ?", "champs": [["Bonus fixes", "+200 Vitalité"], ["Passif (le plus précis gagne les points)", "Vert Émeraude : • Lorsque le porteur termine son tour, il gagne 100% de son niveau en bouclier pendant 1 tour pour chaque ennemi à son contact. Les effets sont réduits de moitié si l'ennemi est une invocation."]], "pts": 3, "temps": 60},
