@@ -195,3 +195,4 @@ input[type=radio],input[type=checkbox]{width:auto;margin:0 .4rem 0 0;vertical-al
 .sub .bonne{margin-left:auto;color:var(--good);font-size:.92rem;font-weight:600;text-align:right;overflow-wrap:anywhere}
 .ecrit{margin-left:.4rem;font-style:italic;color:var(--muted)}
 .ecrit.faute{color:#f5c542;font-weight:600}
+#p-text,#c-text{white-space:pre-line}   /* les retours à la ligne des questions s'affichent */
