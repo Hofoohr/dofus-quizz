@@ -25,9 +25,10 @@ import cartes from "./questions/cartes.js";
 import geoguessr from "./questions/geoguessr.js";
 import confusion from "./questions/confusion.js";
 import monstresPixel from "./questions/monstres-pixel.js";
+import croquettes from "./questions/croquettes.js";
 import { caseAViser } from "./confusion.js";
 
-const CATEGORIES = [quetes, quetesDofus, sorts, panoplies, dofus, legendaires, succesDonjons, donjons, metiers, cartes, geoguessr, confusion, monstresPixel];
+const CATEGORIES = [quetes, quetesDofus, sorts, panoplies, dofus, legendaires, succesDonjons, donjons, metiers, cartes, geoguessr, confusion, monstresPixel, croquettes];
 
 // Clé stable d'une question pour les statistiques (ne dépend pas de la place de la question dans la banque) : empreinte de son contenu.
 const empreinte = s => {
