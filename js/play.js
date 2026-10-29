@@ -13,7 +13,7 @@ const SAVE_DELAY_MS = 300;   // délai d'enregistrement pendant la frappe
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 // Intitulés des champs d'une question à plusieurs champs (null pour une question simple).
-const fieldsOf = q => (q && q.champs ? Object.values(q.champs) : null);
+const fieldsOf = q => (q && q.champs && !bankOf(q).unique ? Object.values(q.champs) : null);   // « unique » : une seule zone de saisie, corrigée en plusieurs parties
 const inputs = () => [...document.querySelectorAll('#p-fields input')];
 let running = false, ctx = null, list = [], sched = [];
 let skipSent = null, skips = {}, offSkips = null, ready = {}, offReady = null, offPlayers = null, players = {};
@@ -147,6 +147,7 @@ function openQuestion(i) {
     monde.invalider(); monde.cadrer([]); drawPin();
   }
   input.value = ''; input.disabled = false;
+  input.placeholder = bankOf(q).unique ? "Écris le nom de l'item et le nom de la légende…" : 'Ta réponse…';
   if (fields) {
     $('p-fields').innerHTML = fields.map((label, k) =>
       `<label class="field">${esc(label)}<input data-k="${k}" maxlength="200" autocomplete="off"></label>`).join('');

@@ -20,6 +20,18 @@ export const tolerance = longueur => (longueur <= 3 ? 0 : 1);
 // La réponse du joueur contient-elle la bonne réponse (sans majuscules, accents ni ponctuation) ? « poukachi » est dans « la légende Poukachi ».
 export const contient = (saisie, attendu) => { const t = normaliser(attendu); return t !== '' && normaliser(saisie).includes(t); };
 
+// La réponse contient-elle le nom attendu, à une lettre près ? On compare le nom à chaque morceau du texte de longueur voisine.
+export const contientProche = (saisie, attendu) => {
+  const n = normaliser(saisie), t = normaliser(attendu);
+  if (t === '') return false;
+  if (n.includes(t)) return true;
+  const tol = tolerance(t.length);
+  if (tol === 0) return false;
+  for (let len = t.length - tol; len <= t.length + tol; len++)
+    for (let i = 0; i + len <= n.length; i++) if (distance(n.slice(i, i + len), t) <= tol) return true;
+  return false;
+};
+
 // Réponse acceptée : le nom exact, ou assez proche (voir tolerance). « autres » : ensemble des noms normalisés de tous les monstres ; une réponse qui est
 // exactement le nom d'un AUTRE monstre est refusée (« Bwork » ne vaut pas « Bworkette »).
 export const estBonNom = (nom, saisie, autres = new Set()) => {

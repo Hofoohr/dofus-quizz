@@ -2,7 +2,7 @@ import { db, ref, get, set, update, onValue, runTransaction } from "./firebase.j
 import { QUESTIONS } from "./questions.js";
 import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
-import { classerParTemps, contient, aUneFaute } from "./devine.js";
+import { classerParTemps, contient, contientProche, aUneFaute } from "./devine.js";
 import { enregistrerPartie } from "./histo.js";
 import { corrigerSort } from "./autosort.js";
 import { creerScene, caseAViser, lireCase, classementRapide, infosScene, lireScene, PLAGE_VIE, COULEURS } from "./confusion.js";
@@ -183,7 +183,8 @@ function renderCorrection() {
           : ctx.isHost
           ? `<button class="v${val === true ? ' on' : ''}" data-id="${id}" data-k="${k}" data-val="1">✅</button><button class="v${val === false ? ' on' : ''}" data-id="${id}" data-k="${k}" data-val="0">❌</button>`
           : `<span class="badge">${val === true ? '✅' : val === false ? '❌' : '…'}</span>`;
-        let t = a && typeof a === 'object' && a[k] != null ? esc(a[k]) : '<i>(pas de réponse)</i>';
+        const dit = bankOf(q).unique ? (typeof a === 'string' ? a : null) : (a && typeof a === 'object' ? a[k] : null);   // « unique » : même texte pour chaque partie
+        let t = dit != null && dit !== '' ? esc(dit) : '<i>(pas de réponse)</i>';
         if (k === bank.coord && expected) {   // champ « coordonnées » : distance à la bonne carte
           const d = texteDistance(a && typeof a === 'object' ? a[k] : null, expected[k]);
           if (d) t += `<small class="dist">${esc(d)}</small>`;
@@ -293,9 +294,10 @@ function autoCorriger() {
   } else Object.keys(players).forEach(id => (fieldsOf(q) || []).forEach((_, k) => {
     const deja = ((verdicts[index] || {})[id] || {})[k];
     if (deja === true || deja === false) return;
-    const a = answers[id], saisie = a && typeof a === 'object' ? a[k] : null;
+    const a = answers[id], saisie = bk.unique ? (typeof a === 'string' ? a : null) : (a && typeof a === 'object' ? a[k] : null);
     const r = bk.auto === 'sort' ? corrigerSort(k, saisie, expected[k])
-      : bk.verif && bk.verif[k] === 'contient' ? contient(saisie, expected[k]) : undefined;   // undefined : le chef juge (champ descriptif, réponse trop particulière)
+      : bk.verif && bk.verif[k] === 'contient' ? contient(saisie, expected[k])
+      : bk.verif && bk.verif[k] === 'proche' ? contientProche(saisie, expected[k]) : undefined;   // undefined : le chef juge (champ descriptif, réponse trop particulière)
     if (r !== undefined) maj[`${index}/${id}/${k}`] = r;
   }));
   if (Object.keys(maj).length) update(path('verdicts'), maj).catch(console.error);
