@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère la catégorie « GeoGuessr (no move) » : une carte tirée au hasard, le joueur devine ses coordonnées.
+"""Génère la catégorie « GeoGuessr » : une carte tirée au hasard, le joueur devine ses coordonnées.
 
 Usage : python3 tools/geoguessr_dofus.py            (reprend là où il s'est arrêté ; plusieurs lancements possibles)
 Écrit : js/questions/geoguessr.js  et  img/geo/*.jpg
@@ -77,7 +77,7 @@ def main():
     (ROOT / "js/questions/geoguessr.js").write_text(
         "// Fichier généré par tools/geoguessr_dofus.py : ne pas modifier à la main (relancer le script).\n"
         "// Une carte au hasard : les joueurs ont 45 s pour deviner ses coordonnées, puis on les classe par distance (voir js/carte.js).\n"
-        'export default {\n  cat: "GeoGuessr (no move)",\n  items: [\n' + "\n".join(lignes) + "\n  ],\n};\n", encoding="utf-8")
+        'export default {\n  cat: "GeoGuessr",\n  items: [\n' + "\n".join(lignes) + "\n  ],\n};\n", encoding="utf-8")
     print(f"{len(items)} / {NOMBRE} cartes gardées, {len(rejets)} écartées par le filtre ({round(time.time() - t0)} s)", file=sys.stderr)
 
 

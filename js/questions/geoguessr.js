@@ -1,7 +1,7 @@
 // Fichier généré par tools/geoguessr_dofus.py : ne pas modifier à la main (relancer le script).
 // Une carte au hasard : les joueurs ont 45 s pour deviner ses coordonnées, puis on les classe par distance (voir js/carte.js).
 export default {
-  cat: "GeoGuessr (no move)",
+  cat: "GeoGuessr",
   items: [
     {"q": "GeoGuessr : où se trouve cette carte ? (le plus proche gagne les points)", "champs": [["Coordonnées (x, y)", "13, 16"]], "pts": 5, "temps": 45, "img": "img/geo/74ea7fc68b.jpg", "coord": 0, "classement": true},
     {"q": "GeoGuessr : où se trouve cette carte ? (le plus proche gagne les points)", "champs": [["Coordonnées (x, y)", "-6, -43"]], "pts": 5, "temps": 45, "img": "img/geo/8299704130.jpg", "coord": 0, "classement": true},
