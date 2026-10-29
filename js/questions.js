@@ -44,6 +44,7 @@ export const QUESTIONS = CATEGORIES.flatMap((c, ci) =>
     else if (it.sprite) o = { id, type: "pixel", cat: c.cat, q: it.q, a: it.nom, nom: it.nom, sprite: it.sprite, pts: it.pts, temps: it.temps };
     else if (it.scene) o = { id, type: "clic", cat: c.cat, q: it.q, a: caseAViser(it.scene).join(","), pts: it.pts, temps: it.temps, scene: it.scene };
     else o = { id, type: "multi", cat: c.cat, q: it.q, champs: it.champs.map(f => f[0]), a: it.champs.map(f => f[1]), pts: it.pts, temps: it.temps, img: it.img, coord: it.coord, classement: it.classement };
+    if (c.auto) o.auto = c.auto;   // catégorie corrigée automatiquement (ex. : « sort »)
     o.cle = empreinte([c.cat, o.q, [].concat(o.a).join('|'), o.img || o.sprite || (o.scene ? JSON.stringify(o.scene) : '')].join('#'));   // identifiant stable pour les statistiques
     return o;
   }));

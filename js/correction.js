@@ -4,6 +4,7 @@ import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
 import { classerParTemps } from "./devine.js";
 import { enregistrerPartie } from "./histo.js";
+import { corrigerSort } from "./autosort.js";
 import { creerScene, caseAViser, lireCase, classementRapide, infosScene, lireScene, PLAGE_VIE, COULEURS } from "./confusion.js";
 
 const $ = id => document.getElementById(id);
@@ -60,9 +61,9 @@ async function initCorrection() {
 // On écoute les réponses et la réponse attendue de la question en cours de correction.
 function subscribeQuestion(i) {
   offQ.forEach(u => u()); offQ = [];
-  answers = {}; expected = null;
+  answers = {}; expected = null; answersPrets = false;
   if (i === null) return;
-  offQ.push(onValue(path(`answers/${i}`), s => { answers = s.val() || {}; render(); }));
+  offQ.push(onValue(path(`answers/${i}`), s => { answers = s.val() || {}; answersPrets = true; render(); }));
   offQ.push(onValue(path(`expected/${i}`), s => { expected = s.val(); render(); }));
 }
 
@@ -86,6 +87,7 @@ function renderCorrection() {
     $('c-expected').innerHTML = fields.map((l, k) =>
       `<span class="exp-line">${esc(l)} : <b>${esc(expected && expected[k] != null ? expected[k] : '…')}</b></span>`).join('');
   } else $('c-expected').textContent = expected ?? '…';
+  $('c-autonote').hidden = bankOf(q).auto !== 'sort';
   $('c-sprite').hidden = !isPixel(q);
   if (isPixel(q)) {
     const bk = bankOf(q), res = pixelOf(index);
@@ -270,9 +272,27 @@ function renderResults() {
   }).join('');
 }
 
+// Correction automatique (catégorie « Sort de classe ») : le chef écrit, champ par champ, le verdict calculé par js/autosort.js pour chaque joueur,
+// une seule fois par question et sans toucher aux champs qu'il a déjà tranchés. Il peut ensuite modifier chaque verdict avec ✅ / ❌.
+let autoFait = {}, answersPrets = false, verdictsPrets = false;
+function autoCorriger() {
+  if (!ctx || !ctx.isHost || index === null || !answersPrets || !verdictsPrets || !expected || autoFait[index]) return;
+  const q = list[index];
+  if (!q || bankOf(q).auto !== 'sort') return;
+  autoFait[index] = true;
+  const maj = {};
+  Object.keys(players).forEach(id => (fieldsOf(q) || []).forEach((_, k) => {
+    const deja = ((verdicts[index] || {})[id] || {})[k];
+    if (deja === true || deja === false) return;
+    const a = answers[id], r = corrigerSort(k, a && typeof a === 'object' ? a[k] : null, expected[k]);
+    if (r !== undefined) maj[`${index}/${id}/${k}`] = r;   // undefined : réponse attendue trop particulière, le chef juge
+  }));
+  if (Object.keys(maj).length) update(path('verdicts'), maj).catch(console.error);
+}
+
 function render() {
   if (!running || !ctx || !list.length) return;
-  if (ctx.phase === 'results') renderResults(); else renderCorrection();
+  if (ctx.phase === 'results') renderResults(); else { autoCorriger(); renderCorrection(); }
 }
 
 // Le chef valide ou refuse une réponse ; un second clic sur le même bouton annule la décision.
@@ -311,7 +331,7 @@ export async function enter(c) {
     list = Array.isArray(v) ? v : Object.values(v);
     list.forEach((q, j) => { if (isAuto(q) || autoChamp(q) >= 0) offs.push(onValue(path(`answers/${j}`), s => { allAnswers[j] = s.val() || {}; render(); })); });
     offs.push(onValue(path('players'), s => { players = s.val() || {}; render(); }));
-    offs.push(onValue(path('verdicts'), s => { verdicts = s.val() || {}; render(); }));
+    offs.push(onValue(path('verdicts'), s => { verdicts = s.val() || {}; verdictsPrets = true; render(); }));
     offs.push(onValue(path('correction/index'), s => {
       index = s.val();
       if (index === null && ctx && ctx.isHost && ctx.phase === 'correction') initCorrection();
@@ -322,7 +342,7 @@ export async function enter(c) {
 }
 
 export function stop() {
-  running = false; statsEnvoyees = false;
+  running = false; statsEnvoyees = false; autoFait = {}; answersPrets = false; verdictsPrets = false;
   document.body.classList.remove('large'); initing = false;
   offs.forEach(u => u()); offQ.forEach(u => u());
   offs = []; offQ = [];

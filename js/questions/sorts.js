@@ -1,6 +1,7 @@
 // Une question à 10 champs par sort de classe, au rang maximal.
 export default {
   cat: "Sort de classe",
+  auto: "sort",   // corrigé automatiquement (js/autosort.js) ; le chef peut modifier chaque champ
   items: [
     {"q": "Sort « Retour du Bâton » (Féca), au rang maximal (niveau 3)", "champs": [["Portée min / max", "1 / 4"], ["Portée modifiable ?", "Oui"], ["Ligne de vue ?", "Oui"], ["Monocible ou zone ? (précisez la zone)", "Monocible"], ["Utilisations par tour", "3"], ["Utilisations par cible", "2"], ["Tours de relance", "Aucun"], ["Relance globale", "Aucune"], ["Intervalle de relance initial", "Aucun"]], "pts": 5, "temps": 45},
     {"q": "Sort « Langueur » (Féca), au rang maximal (niveau 3)", "champs": [["Portée min / max", "1 / 7"], ["Portée modifiable ?", "Oui"], ["Ligne de vue ?", "Oui"], ["Monocible ou zone ? (précisez la zone)", "Monocible"], ["Utilisations par tour", "3"], ["Utilisations par cible", "2"], ["Tours de relance", "Aucun"], ["Relance globale", "Aucune"], ["Intervalle de relance initial", "Aucun"]], "pts": 5, "temps": 45},
