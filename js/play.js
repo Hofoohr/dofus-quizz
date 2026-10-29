@@ -3,7 +3,7 @@ import { QUESTIONS } from "./questions.js";
 import { creerMonde } from "./monde.js";
 import { lireCoord } from "./carte.js";
 import { creerScene, infosScene, lireCase, lireTemps, lireScene } from "./confusion.js";
-import { estBonNom, lireTrouve, lireEssais, blocs, dessinerPixel, TAILLE_MAX } from "./devine.js";
+import { estBonNom, presque, normaliser, lireTrouve, lireEssais, blocs, dessinerPixel, TAILLE_MAX } from "./devine.js";
 
 const COUNTDOWN_MS = 0;      // compte à rebours avant la première question (0 = la partie démarre aussitôt)
 const PAUSE_MS = 0;          // pause entre deux questions (0 = on enchaîne directement)
@@ -39,12 +39,13 @@ const isClic = q => !!sceneOf(q);
 // « Monstre pixelisé » : image qui se précise, nom exact à taper (essais illimités). On n'enregistre que la réussite : « ok@ms ».
 const isPixel = q => !!bankOf(q).sprite;
 let pixelImg = null, trouveMs = null, essais = 0;
+const NOMS_MONSTRES = new Set(QUESTIONS.filter(q => q.type === 'pixel').map(q => normaliser(q.nom)));   // pour refuser le nom exact d'un autre monstre
 function essayer() {
   if (cur === null || lockedFor === cur || trouveMs !== null || !isPixel(list[cur])) return;
   const saisie = $('p-answer').value;
   if (!saisie.trim()) return;
   essais++;
-  if (estBonNom(bankOf(list[cur]).nom, saisie)) {
+  if (estBonNom(bankOf(list[cur]).nom, saisie, NOMS_MONSTRES)) {
     trouveMs = Math.max(0, Math.round(serverNow() - sched[cur].start));
     $('p-answer').disabled = true; $('p-try').disabled = true;
     majPixel();
@@ -52,7 +53,8 @@ function essayer() {
     // Trouvé : on se met automatiquement « prêt ». Quand tout le monde est prêt (donc a trouvé), la question suivante arrive toute seule.
     set(ref(db, `rooms/${ctx.code}/ready/${cur}/${ctx.uid}`), true).catch(console.error);
   } else {
-    $('p-pixelmsg').className = 'hint bad'; $('p-pixelmsg').textContent = `❌ Ce n'est pas « ${saisie.trim()} » (essai ${essais}). Réessaie !`;
+    const proche = presque(bankOf(list[cur]).nom, saisie, NOMS_MONSTRES);
+    $('p-pixelmsg').className = 'hint bad'; $('p-pixelmsg').textContent = proche ? `🔥 Tu y es presque ! « ${saisie.trim()} » n'est pas tout à fait ça (essai ${essais}).` : `❌ Ce n'est pas « ${saisie.trim()} » (essai ${essais}). Réessaie !`;
     $('p-answer').select();
     saveNow(cur);   // on garde le compte des essais (affiché pour le plaisir en correction)
   }
@@ -130,7 +132,7 @@ function openQuestion(i) {
   $('p-mapbox').hidden = !rank;
   const clic = isClic(q), pixel = isPixel(q);
   $('p-pixelbox').hidden = !pixel; $('p-try').hidden = !pixel; $('p-try').disabled = false;
-  trouveMs = null; essais = 0; $('p-pixelmsg').className = 'hint'; $('p-pixelmsg').textContent = 'Tape le nom du monstre (majuscules, accents et une faute de frappe d\'une lettre sont acceptés) : autant d\'essais que tu veux !';
+  trouveMs = null; essais = 0; $('p-pixelmsg').className = 'hint'; $('p-pixelmsg').textContent = 'Tape le nom du monstre (majuscules, accents et petites fautes de frappe sont acceptés) : autant d\'essais que tu veux !';
   if (pixel) { pixelImg = Object.assign(new Image(), { src: bankOf(q).sprite }); pixelImg.onload = () => majPixel(); majPixel(); }
   $('p-scenebox').hidden = true;   // affichée par tick() une fois l'annonce terminée
   $('p-rush').hidden = !clic;

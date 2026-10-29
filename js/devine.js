@@ -4,24 +4,36 @@
 // Nom comparé sans majuscules, accents, espaces ni ponctuation : « Bwork Archer » = « bwork  archer ! ».
 export const normaliser = s => String(s ?? '').toLowerCase().replace(/œ/g, 'oe').replace(/æ/g, 'ae')
   .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
-// Vrai si a et b diffèrent d'au plus une lettre (une lettre en trop, en moins, changée, ou deux lettres voisines inversées).
-function uneFauteAuPlus(a, b) {
-  if (a === b) return true;
-  if (Math.abs(a.length - b.length) > 1) return false;
-  let i = 0;
-  while (i < a.length && i < b.length && a[i] === b[i]) i++;
-  const ra = a.slice(i), rb = b.slice(i);
-  if (ra.slice(1) === rb.slice(1)) return true;                                   // une lettre changée
-  if (ra.slice(1) === rb) return true;                                            // une lettre en trop dans a
-  if (ra === rb.slice(1)) return true;                                            // une lettre manquante dans a
-  return ra.length >= 2 && rb.length >= 2 && ra[0] === rb[1] && ra[1] === rb[0] && ra.slice(2) === rb.slice(2);   // deux lettres inversées
+// Distance d'édition entre deux textes : nombre de lettres à ajouter, enlever ou changer, ou de paires voisines à inverser (« Bouftou » / « Boutfou » : 1).
+function distance(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+  }
+  return d[a.length][b.length];
 }
-// Une faute de frappe d'une lettre est acceptée, sauf pour les noms de 3 lettres ou moins (trop de risques de confusion).
+// Nombre de fautes tolérées selon la longueur du nom : plus le nom est long, plus on pardonne.
+//   3 lettres ou moins : aucune ; 4 à 7 : 1 ; 8 à 11 : 2 ; 12 ou plus : 3. (Modifie ces seuils pour être plus ou moins indulgent.)
+export const tolerance = longueur => (longueur <= 3 ? 0 : longueur <= 7 ? 1 : longueur <= 11 ? 2 : 3);
+
 // La réponse du joueur contient-elle la bonne réponse (sans majuscules, accents ni ponctuation) ? « poukachi » est dans « la légende Poukachi ».
 export const contient = (saisie, attendu) => { const t = normaliser(attendu); return t !== '' && normaliser(saisie).includes(t); };
-export const estBonNom = (nom, saisie) => {
+
+// Réponse acceptée : le nom exact, ou assez proche (voir tolerance). « autres » : ensemble des noms normalisés de tous les monstres ; une réponse qui est
+// exactement le nom d'un AUTRE monstre est refusée (« Bwork » ne vaut pas « Bworkette »).
+export const estBonNom = (nom, saisie, autres = new Set()) => {
   const n = normaliser(saisie), t = normaliser(nom);
-  return n !== '' && (n === t || (t.length >= 4 && uneFauteAuPlus(n, t)));
+  if (n === '') return false;
+  if (n === t) return true;
+  if (autres.has(n)) return false;
+  return distance(n, t) <= tolerance(t.length);
+};
+// Réponse refusée mais très proche (une faute de plus que la tolérance) : on peut encourager le joueur.
+export const presque = (nom, saisie, autres = new Set()) => {
+  const n = normaliser(saisie), t = normaliser(nom);
+  return n !== '' && !autres.has(n) && distance(n, t) <= tolerance(t.length) + 1 && t.length >= 4;
 };
 
 // Réponse enregistrée : « ok@ms:essais » quand le monstre est trouvé (ms = temps écoulé depuis le début de la question), « no:essais » sinon.
