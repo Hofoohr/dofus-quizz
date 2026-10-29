@@ -169,3 +169,14 @@ body.large #app{max-width:980px}
 .h-partie ol{list-style:none;padding:0;margin:.4rem 0 0}
 .h-partie li{display:flex;justify-content:space-between;gap:.6rem;padding:.2rem 0;border-top:1px solid var(--line)}
 .h-partie li span{min-width:0;overflow-wrap:anywhere}
+
+/* Choix des catégories : un rectangle par catégorie, allumé quand elle est choisie */
+#cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem}
+.cat{position:relative;display:block;margin:0}
+.cat input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+.cat span{display:flex;align-items:center;justify-content:center;min-height:3rem;padding:.5rem .6rem;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted);cursor:pointer;user-select:none;transition:background .12s,border-color .12s,color .12s}
+.cat span:hover{border-color:var(--accent)}
+.cat input:checked + span{border-color:var(--accent);background:rgba(124,92,255,.25);color:var(--text);font-weight:600}
+.cat input:focus-visible + span{outline:2px solid var(--text);outline-offset:2px}
+input[type=radio],input[type=checkbox]{width:auto;margin:0 .4rem 0 0;vertical-align:middle}
+.cat input{margin:0}

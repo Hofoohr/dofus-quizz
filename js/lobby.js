@@ -232,7 +232,7 @@ async function leaveGame() {
 // --- Démarrage ---
 $('pseudo').value = load('pseudo') || '';
 const cats = [...new Set(QUESTIONS.map(q => q.cat))];
-$('cats').innerHTML = cats.map(c => `<label class="chk"><input type="checkbox" value="${c}" checked> ${c}</label>`).join('');
+$('cats').innerHTML = cats.map(c => `<label class="cat"><input type="checkbox" value="${c}" checked><span>${c}</span></label>`).join('');
 $('create').onclick = createRoom;
 $('join').onclick = joinRoom;
 $('start').onclick = startGame;
