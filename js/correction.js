@@ -189,7 +189,9 @@ function renderCorrection() {
           if (d) t += `<small class="dist">${esc(d)}</small>`;
         }
         const etat = cr ? (cr.points > 0 ? 'ok' : 'ko') : val === true ? 'ok' : val === false ? 'ko' : '';
-        return `<div class="sub ${etat}"><span class="lbl">${esc(label)}</span><span class="ans">${t}</span><span class="verdict">${verdict}</span></div>`;
+        // champ jugé faux : la bonne réponse s'affiche à droite de la réponse du joueur, avant les boutons de validation
+        const bonne = !cr && val === false && expected && expected[k] != null ? `<span class="bonne">→ ${esc(expected[k])}</span>` : '';
+        return `<div class="sub ${etat}"><span class="lbl">${esc(label)}</span><span class="ans"><span class="rep">${t}</span>${bonne}</span><span class="verdict">${verdict}</span></div>`;
       }).join('');
       return `<li class="row multi"><div class="who"><b>${esc(players[id].name)}</b>${id === ctx.uid ? ' <small>(toi)</small>' : ''}${got === null ? '' : `<span>${got} / ${fields.length - (autoChamp(q) >= 0 ? 1 : 0)}</span>`}</div>${subs}</li>`;
     }
