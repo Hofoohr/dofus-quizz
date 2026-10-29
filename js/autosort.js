@@ -51,6 +51,9 @@ export function corrigerSort(k, saisie, attendu) {
       return a === null ? undefined : r === a;
     }
     case 3: return memeZone(saisie, attendu);
-    default: return valeur(saisie) === valeur(attendu);   // utilisations, relances : nombre, « illimité » ou « aucun »
+    default: {   // utilisations, relances : nombre, « illimité » ou « aucun »
+      const r = valeur(saisie), a = valeur(attendu);
+      return r === a || (a === 'inf' && r === 'aucun');   // « illimité » s'écrit aussi « / », « 0 », « - »…
+    }
   }
 }
