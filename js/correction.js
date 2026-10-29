@@ -2,7 +2,7 @@ import { db, ref, get, set, update, onValue, runTransaction } from "./firebase.j
 import { QUESTIONS } from "./questions.js";
 import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
-import { classerParTemps, contient } from "./devine.js";
+import { classerParTemps, contient, aUneFaute } from "./devine.js";
 import { enregistrerPartie } from "./histo.js";
 import { corrigerSort } from "./autosort.js";
 import { creerScene, caseAViser, lireCase, classementRapide, infosScene, lireScene, PLAGE_VIE, COULEURS } from "./confusion.js";
@@ -101,7 +101,7 @@ function renderCorrection() {
       const ess = r.essais === null ? '' : r.essais <= 1 ? ' du premier coup' : ` en ${r.essais} essais`;
       const t = r.ms === null ? (r.essais ? `n'a pas trouvé après ${r.essais} essai${r.essais > 1 ? 's' : ''}` : "n'a pas trouvé (aucun essai)") : `trouvé en ${String(Math.round(r.ms / 100) / 10).replace('.', ',')} s${ess}`;
       return `<li class="row rank ${r.trouve ? 'ok' : 'ko'}"><div class="who"><b>${medal} ${esc(players[id].name)}${id === ctx.uid ? ' <small>(toi)</small>' : ''}</b><span>+${String(r.points).replace('.', ',')} pt${r.points >= 2 ? 's' : ''}</span></div>
-        <div class="ans">${r.trouve ? '⚡ ' : ''}${t}</div></li>`;
+        <div class="ans">${r.trouve ? '⚡ ' : ''}${t}${r.saisie ? ` <span class="ecrit${aUneFaute(bk.nom, r.saisie) ? ' faute' : ''}">écrit : « ${esc(r.saisie)} »</span>` : ''}</div></li>`;
     }).join('');
     $('c-host').hidden = !ctx.isHost; $('c-wait').hidden = ctx.isHost;
     $('c-prev').disabled = index === 0;

@@ -193,3 +193,5 @@ input[type=radio],input[type=checkbox]{width:auto;margin:0 .4rem 0 0;vertical-al
 .sub .ans{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.2rem .8rem;min-width:0}
 .sub .rep{min-width:0;overflow-wrap:anywhere}
 .sub .bonne{margin-left:auto;color:var(--good);font-size:.92rem;font-weight:600;text-align:right;overflow-wrap:anywhere}
+.ecrit{margin-left:.4rem;font-style:italic;color:var(--muted)}
+.ecrit.faute{color:#f5c542;font-weight:600}

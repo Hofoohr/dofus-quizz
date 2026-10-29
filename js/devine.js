@@ -14,9 +14,8 @@ function distance(a, b) {
   }
   return d[a.length][b.length];
 }
-// Nombre de fautes tolérées selon la longueur du nom : plus le nom est long, plus on pardonne.
-//   3 lettres ou moins : aucune ; 4 à 7 : 1 ; 8 à 11 : 2 ; 12 ou plus : 3. (Modifie ces seuils pour être plus ou moins indulgent.)
-export const tolerance = longueur => (longueur <= 3 ? 0 : longueur <= 7 ? 1 : longueur <= 11 ? 2 : 3);
+// Fautes tolérées : une seule lettre de différence (ajoutée, retirée, changée, ou deux lettres voisines inversées), sauf pour les noms de 3 lettres ou moins.
+export const tolerance = longueur => (longueur <= 3 ? 0 : 1);
 
 // La réponse du joueur contient-elle la bonne réponse (sans majuscules, accents ni ponctuation) ? « poukachi » est dans « la légende Poukachi ».
 export const contient = (saisie, attendu) => { const t = normaliser(attendu); return t !== '' && normaliser(saisie).includes(t); };
@@ -36,10 +35,13 @@ export const presque = (nom, saisie, autres = new Set()) => {
   return n !== '' && !autres.has(n) && distance(n, t) <= tolerance(t.length) + 1 && t.length >= 4;
 };
 
-// Réponse enregistrée : « ok@ms:essais » quand le monstre est trouvé (ms = temps écoulé depuis le début de la question), « no:essais » sinon.
-export const lireTrouve = t => { const m = /^ok@(\d+)(?::\d+)?$/.exec(String(t ?? '')); return m ? +m[1] : null; };
+// Réponse enregistrée : « ok@ms:essais|texte » quand le monstre est trouvé (ms = temps écoulé depuis le début de la question, texte = ce que le joueur a écrit),
+// « no:essais » sinon. L'ancien format « ok@ms » ou « ok@ms:essais » reste lisible.
+export const lireTrouve = t => { const m = /^ok@(\d+)(?::\d+)?(?:\|.*)?$/s.exec(String(t ?? '')); return m ? +m[1] : null; };
+// Ce que le joueur a écrit quand il a trouvé (null si inconnu).
+export const lireSaisie = t => { const m = /^ok@\d+(?::\d+)?\|(.*)$/s.exec(String(t ?? '')); return m ? m[1] : null; };
 // Nombre d'essais (sert seulement à s'amuser dans la correction) ; null si inconnu.
-export const lireEssais = t => { const m = /^(?:ok@\d+:|no:)(\d+)$/.exec(String(t ?? '')); return m ? +m[1] : null; };
+export const lireEssais = t => { const m = /^(?:ok@\d+:|no:)(\d+)(?:\|.*)?$/s.exec(String(t ?? '')); return m ? +m[1] : null; };
 
 // Points : parmi ceux qui ont trouvé, le plus rapide gagne le plus. pts × (n − rang + 1) / n, n = nombre de joueurs ; ex æquo : même rang.
 // Retourne { idJoueur: { trouve, ms, rang, points, essais } }.
@@ -50,7 +52,7 @@ export function classerParTemps(reponses, joueurs, pts) {
     const essais = lireEssais(rep[id]);
     if (ms === null) { out[id] = { trouve: false, ms: null, rang: null, points: 0, essais }; return; }
     const rang = 1 + joueurs.filter(o => { const t = lireTrouve(rep[o]); return t !== null && t < ms; }).length;
-    out[id] = { trouve: true, ms, rang, points: Math.round(pts * (n - rang + 1) / n * 10) / 10, essais };
+    out[id] = { trouve: true, ms, rang, points: Math.round(pts * (n - rang + 1) / n * 10) / 10, essais, saisie: lireSaisie(rep[id]) };
   });
   return out;
 }
@@ -74,3 +76,6 @@ export function dessinerPixel(canvas, img, g) {
   ctx.imageSmoothingEnabled = false;                                                         // agrandissement sans lissage : de gros pixels carrés
   ctx.drawImage(mini, 0, 0, canvas.width, canvas.height);
 }
+
+// La réponse acceptée contient-elle une faute d'orthographe (hors majuscules, accents et ponctuation) ?
+export const aUneFaute = (nom, saisie) => saisie != null && normaliser(saisie) !== normaliser(nom);
