@@ -1,6 +1,7 @@
 // Une question par quête de chaque Dofus.
 export default {
   cat: "Quêtes",
+  verif: "dofus",   // corrigé automatiquement : « Vulbis » ou « Dofus Vulbis » (js/devine.js)
   items: [
     ["À quel Dofus est reliée la quête « Retourner voir le Dark Vlad, toujours sans mourir » ?", "Dofus Émeraude", 3, 20, "Dofus Émeraude"],
     ["À quel Dofus est reliée la quête « Qui botte le cul des Culs Bottés ? » ?", "Dofus Émeraude", 3, 20, "Dofus Émeraude"],

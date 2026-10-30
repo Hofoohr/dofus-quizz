@@ -2,7 +2,7 @@ import { db, ref, get, set, update, onValue, runTransaction } from "./firebase.j
 import { QUESTIONS } from "./questions.js";
 import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
-import { classerParTemps, contient, contientProche, aUneFaute } from "./devine.js";
+import { classerParTemps, contient, contientProche, memeDofus, aUneFaute } from "./devine.js";
 import { enregistrerPartie } from "./histo.js";
 import { corrigerSort } from "./autosort.js";
 import { creerScene, caseAViser, lireCase, classementRapide, infosScene, lireScene, PLAGE_VIE, COULEURS } from "./confusion.js";
@@ -309,7 +309,7 @@ function autoCorriger() {
     Object.keys(players).forEach(id => {
       const deja = (verdicts[index] || {})[id];
       if (deja === true || deja === false) return;
-      maj[`${index}/${id}`] = contient(typeof answers[id] === 'string' ? answers[id] : '', expected);
+      maj[`${index}/${id}`] = (bk.verif === 'dofus' ? memeDofus : contient)(typeof answers[id] === 'string' ? answers[id] : '', expected);
     });
   } else Object.keys(players).forEach(id => (fieldsOf(q) || []).forEach((_, k) => {
     const deja = ((verdicts[index] || {})[id] || {})[k];

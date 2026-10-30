@@ -32,6 +32,16 @@ export const contientProche = (saisie, attendu) => {
   return false;
 };
 
+// Quêtes : « À quel Dofus est reliée la quête… ». On accepte « Vulbis » comme « Dofus Vulbis » (et « Cauchemar » pour « Dofus du Cauchemar »),
+// avec une lettre de différence au plus : on compare les noms sans « dofus » ni articles (du, des, de, la…).
+const MOTS_VIDES = new Set(['dofus', 'du', 'des', 'de', 'd', 'la', 'le', 'les', 'l']);
+const nomCourt = s => String(s ?? '').toLowerCase().replace(/œ/g, 'oe').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .split(/[^a-z0-9]+/).filter(m => m && !MOTS_VIDES.has(m)).join('');
+export const memeDofus = (saisie, attendu) => {
+  const n = nomCourt(saisie), t = nomCourt(attendu);
+  return n !== '' && t !== '' && (n === t || distance(n, t) <= tolerance(t.length));
+};
+
 // Réponse acceptée : le nom exact, ou assez proche (voir tolerance). « autres » : ensemble des noms normalisés de tous les monstres ; une réponse qui est
 // exactement le nom d'un AUTRE monstre est refusée (« Bwork » ne vaut pas « Bworkette »).
 export const estBonNom = (nom, saisie, autres = new Set()) => {
