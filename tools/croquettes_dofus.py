@@ -20,8 +20,8 @@ ROOT = Path(__file__).resolve().parent.parent
 API = "https://api.dofusdb.fr"
 LEGENDES = {20964: "Kwakarticho", 20965: "Poukachi", 20966: "Magicrabe", 20967: "Bakushana"}   # « Légende animale de … »
 PTS, TEMPS_EFFET, TEMPS_NOM = 5, 50, 40
-CHAMP_LEGENDE = "Quelle légende craft cette croquette ? (la moitié des points)"
-CHAMP_EFFET = "Effet de la croquette (la moitié des points, le plus précis gagne)"
+CHAMP_LEGENDE = "Quelle légende craft cette croquette ?"
+CHAMP_EFFET = "Effet de la croquette (le plus précis gagne)"
 
 
 def get(path, params=None):
@@ -65,7 +65,7 @@ def main():
                       "champs": [[CHAMP_EFFET, f"{pnom} : {texte}"], [CHAMP_LEGENDE, legendes[0]]], "pts": PTS, "temps": TEMPS_EFFET,
                       "verif": [None, "contient"]})   # l'effet est jugé par le chef ; la légende est vérifiée automatiquement
         items.append({"q": f"Quelle croquette infusée a cet effet : {texte}",
-                      "champs": [["Nom de la croquette, sans « croquette infusée » (la moitié des points)", court], [CHAMP_LEGENDE, legendes[0]]], "pts": PTS, "temps": TEMPS_NOM,
+                      "champs": [["Nom de la croquette, sans « croquette infusée »", court], [CHAMP_LEGENDE, legendes[0]]], "pts": PTS, "temps": TEMPS_NOM,
                       "verif": ["proche", "contient"]})   # nom (une lettre d'écart acceptée) et légende : vérifiés automatiquement
     lignes = ["    " + json.dumps(i, ensure_ascii=False) + "," for i in items]
     (ROOT / "js/questions/croquettes.js").write_text(
