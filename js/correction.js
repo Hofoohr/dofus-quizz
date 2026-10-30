@@ -246,8 +246,9 @@ async function enregistrerStats() {
         else { const r = pixelOf(j); ids.forEach(id => { n++; ok += r[id].trouve ? 1 : 0; }); }
       } else {
         const nb = fieldsOf(q) ? fieldsOf(q).length : 1;
-        const ac = autoChamp(q) >= 0, cr = ac ? coordRank(j) : null;   // « carte » : réussi = champs du chef justes ET coordonnées exactes
-        ids.forEach(id => { const r = result(q, (verr[j] || {})[id]); if (r === null) return; n++; ok += r === nb - (ac ? 1 : 0) && (!ac || cr[id].d === 0) ? 1 : 0; });   // pas de verdict du chef : non compté
+        const ac = autoChamp(q) >= 0, cr = ac ? coordRank(j) : null;
+        const seuil = bk.niveauChamp != null ? 10 : 1e-9;   // panoplie : réussi si le niveau est à moins de 10 niveaux ; carte : coordonnées exactes   // réussi = champs du chef justes ET (carte : coordonnées exactes ; panoplie : niveau à moins de 10 niveaux)
+        ids.forEach(id => { const r = result(q, (verr[j] || {})[id]); if (r === null) return; n++; ok += r === nb - (ac ? 1 : 0) && (!ac || (cr[id].d !== null && cr[id].d < seuil)) ? 1 : 0; });   // pas de verdict du chef : non compté
       }
       return n ? { cle: bk.cle, n, ok } : null;
     }));
