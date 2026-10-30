@@ -37,8 +37,11 @@ export const contientProche = (saisie, attendu) => {
 const MOTS_VIDES = new Set(['dofus', 'du', 'des', 'de', 'd', 'la', 'le', 'les', 'l']);
 const nomCourt = s => String(s ?? '').toLowerCase().replace(/œ/g, 'oe').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   .split(/[^a-z0-9]+/).filter(m => m && !MOTS_VIDES.has(m)).join('');
+// Sigle : les initiales de tous les mots (« Dofus des Glaces » : DDG). Accepté à partir de 3 lettres, sinon trop de noms auraient le même (DE : Émeraude et Ébène).
+const sigle = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/).filter(Boolean).map(m => m[0]).join('');
 export const memeDofus = (saisie, attendu) => {
-  const n = nomCourt(saisie), t = nomCourt(attendu);
+  const n = nomCourt(saisie), t = nomCourt(attendu), sg = sigle(attendu);
+  if (sg.length >= 3 && normaliser(saisie) === sg) return true;
   return n !== '' && t !== '' && (n === t || distance(n, t) <= tolerance(t.length));
 };
 
