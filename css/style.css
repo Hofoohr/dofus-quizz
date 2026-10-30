@@ -196,3 +196,7 @@ input[type=radio],input[type=checkbox]{width:auto;margin:0 .4rem 0 0;vertical-al
 .ecrit{margin-left:.4rem;font-style:italic;color:var(--muted)}
 .ecrit.faute{color:#f5c542;font-weight:600}
 #p-text,#c-text{white-space:pre-line}   /* les retours à la ligne des questions s'affichent */
+.row.jaune{border-color:#f5c542;background:rgba(245,197,66,.1)}
+.row.rank .ans.uni{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.2rem .8rem}
+.row.rank .ans.uni .rep{min-width:0;overflow-wrap:anywhere}
+.row.rank .ans.uni .bonne{margin-left:auto;color:var(--good);font-weight:600;text-align:right;overflow-wrap:anywhere}

@@ -2,7 +2,7 @@ import { db, ref, get, set, update, onValue, runTransaction } from "./firebase.j
 import { QUESTIONS } from "./questions.js";
 import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
-import { classerParTemps, contient, contientProche, contientLegende, aUneFaute } from "./devine.js";
+import { classerParTemps, contient, contientProche, aUneFaute } from "./devine.js";
 import { enregistrerPartie } from "./histo.js";
 import { corrigerSort } from "./autosort.js";
 import { creerScene, caseAViser, lireCase, classementRapide, infosScene, lireScene, PLAGE_VIE, COULEURS } from "./confusion.js";
@@ -172,6 +172,17 @@ function renderCorrection() {
   const v = verdicts[index] || {};
   $('c-list').innerHTML = order().map(id => {
     const a = answers[id];
+    if (fields && bankOf(q).verif === 'nom-legende') {   // une seule ligne : vert (tous les points), jaune (moitié), rouge (0)
+      const o = v[id] && typeof v[id] === 'object' ? v[id] : {};
+      const etat = o[0] === true ? 'plein' : o[0] === false && o[1] === true ? 'moitie' : o[0] === false && o[1] === false ? 'rien' : null;
+      const pts = etat === 'plein' ? q.pts : etat === 'moitie' ? q.pts / 2 : etat === 'rien' ? 0 : null;
+      const btn = (e, sym) => `<button class="v${etat === e ? ' on' : ''}" data-id="${id}" data-etat="${e}">${sym}</button>`;
+      const verdict = ctx.isHost ? btn('plein', '✅') + btn('moitie', '🟡') + btn('rien', '❌')
+        : `<span class="badge">${etat === 'plein' ? '✅' : etat === 'moitie' ? '🟡' : etat === 'rien' ? '❌' : '…'}</span>`;
+      const dit = typeof a === 'string' && a !== '' ? esc(a) : '<i>(pas de réponse)</i>';
+      return `<li class="row rank ${etat === 'plein' ? 'ok' : etat === 'moitie' ? 'jaune' : etat === 'rien' ? 'ko' : ''}"><div class="who"><b>${esc(players[id].name)}${id === ctx.uid ? ' <small>(toi)</small>' : ''}</b><span>${pts === null ? '…' : '+' + String(pts).replace('.', ',') + ' pt' + (pts >= 2 ? 's' : '')}</span></div>
+        <div class="ans uni"><span class="rep">${dit}</span>${expected ? `<span class="bonne">→ ${esc(expected[0])} / ${esc(expected[1])}</span>` : ''}</div><div class="verdict">${verdict}</div></li>`;
+    }
     if (fields) {
       const mine = v[id] && typeof v[id] === 'object' ? v[id] : {};
       const got = result(q, v[id]);
@@ -285,7 +296,16 @@ function autoCorriger() {
   if (!bk || (bk.auto !== 'sort' && !bk.verif)) return;
   autoFait[index] = true;
   const maj = {};
-  if (bk.verif && !fieldsOf(q)) {   // question simple « le nom de l'item » : verdict global
+  if (bk.verif === 'nom-legende') {   // équipement légendaire : nom complet bon = tous les points (la légende suit) ; seulement la légende = moitié ; rien = 0
+    Object.keys(players).forEach(id => {
+      const o = (verdicts[index] || {})[id];
+      if (o && (o[0] === true || o[0] === false)) return;
+      const a = typeof answers[id] === 'string' ? answers[id] : '';
+      const nomOk = contientProche(a, expected[0]);
+      maj[`${index}/${id}/0`] = nomOk;
+      maj[`${index}/${id}/1`] = nomOk || contientProche(a, expected[1]);
+    });
+  } else if (bk.verif && !fieldsOf(q)) {   // question simple « le nom de l'item » : verdict global
     Object.keys(players).forEach(id => {
       const deja = (verdicts[index] || {})[id];
       if (deja === true || deja === false) return;
@@ -297,8 +317,7 @@ function autoCorriger() {
     const a = answers[id], saisie = bk.unique ? (typeof a === 'string' ? a : null) : (a && typeof a === 'object' ? a[k] : null);
     const r = bk.auto === 'sort' ? corrigerSort(k, saisie, expected[k])
       : bk.verif && bk.verif[k] === 'contient' ? contient(saisie, expected[k])
-      : bk.verif && bk.verif[k] === 'proche' ? contientProche(saisie, expected[k])
-      : bk.verif && bk.verif[k] === 'legende' ? contientLegende(saisie, expected[0], expected[k]) : undefined;   // undefined : le chef juge (champ descriptif, réponse trop particulière)
+      : bk.verif && bk.verif[k] === 'proche' ? contientProche(saisie, expected[k]) : undefined;   // undefined : le chef juge (champ descriptif, réponse trop particulière)
     if (r !== undefined) maj[`${index}/${id}/${k}`] = r;
   }));
   if (Object.keys(maj).length) update(path('verdicts'), maj).catch(console.error);
@@ -313,6 +332,11 @@ function render() {
 $('c-list').addEventListener('click', e => {
   const b = e.target.closest('.v');
   if (!b || !ctx || !ctx.isHost) return;
+  if (b.dataset.etat) {   // question « nom + légende » : ✅ tous les points, 🟡 moitié, ❌ rien
+    const e = b.dataset.etat, base = `${b.dataset.id}`;
+    update(path(`verdicts/${index}/${base}`), { 0: e === 'plein', 1: e !== 'rien' }).catch(console.error);
+    return;
+  }
   const id = b.dataset.id, val = b.dataset.val === '1', k = b.dataset.k;
   const mine = (verdicts[index] || {})[id];
   const cur = k === undefined ? mine : (mine && typeof mine === 'object' ? mine[k] : undefined);
