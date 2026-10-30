@@ -41,6 +41,26 @@ export default {
     ["Quelle pioche minimale permet de miner l'obsidienne ?", "La pioche en diamant", 5, 30],
     ["Combien de sources d'eau faut-il pour créer une source d'eau infinie ?", "2", 5, 30],
     ["Quel objet lâche le Wither quand on le tue ?", "L'étoile du Nether", 5, 30],
-    ["Quelle plante utilisée en alchimie ne peut être plantée que sur du sable des âmes ?", "La verrue du Nether", 5, 30]
+    ["Quelle plante utilisée en alchimie ne peut être plantée que sur du sable des âmes ?", "La verrue du Nether", 5, 30],
+    ["Combien de blocs d'obsidienne faut-il au minimum pour construire un portail du Nether (sans les coins) ?", "10", 5, 30],
+    ["Avec quel matériau recharge-t-on une ancre de réapparition ?", "De la pierre lumineuse", 5, 30],
+    ["Quels sont les deux types de forêts du Nether ?", "La forêt carmin et la forêt biscornue", 5, 30],
+    ["Quel est le nom anglais de la mise à jour 1.19 ?", "The Wild Update", 5, 30],
+    ["Quel est le nom anglais de la mise à jour 1.20 ?", "Trails & Tales", 5, 30],
+    ["Quel est le nom anglais de la mise à jour 1.13, consacrée aux océans ?", "Update Aquatic", 5, 30],
+    ["Combien de points de faim restaure un steak cuit ?", "8 (4 gigots)", 5, 30],
+    ["Quelle est la taille d'un Ghast, en blocs ?", "4 × 4 × 4", 5, 30],
+    ["Quel ingrédient permet de fabriquer une potion de rapidité ?", "Le sucre", 5, 30],
+    ["Quel ingrédient permet de fabriquer une potion de respiration aquatique ?", "Le poisson-globe", 5, 30],
+    ["Quel ingrédient permet de fabriquer une potion de vision nocturne ?", "La carotte dorée", 5, 30],
+    ["Combien de niveaux comporte une pyramide complète pour une balise à pleine puissance ?", "4", 5, 30],
+    ["Pour combien Microsoft a-t-il racheté Mojang en 2014 ?", "2,5 milliards de dollars", 5, 30],
+    ["Combien d'emplacements possède un grand coffre ?", "54", 5, 30],
+    ["Quelle est la taille d'un chunk, en blocs (largeur × longueur) ?", "16 × 16", 5, 30],
+    ["Au bout de combien de jours sans dormir les Phantoms commencent-ils à apparaître ?", "3 jours", 5, 30],
+    ["Que devient un Creeper frappé par la foudre ?", "Un Creeper chargé", 5, 30],
+    ["Quel objet permet de regarder un Enderman sans qu'il devienne agressif ?", "Une citrouille sur la tête", 5, 30],
+    ["Que lâche un Shulker en mourant (parfois) ?", "Une carapace de Shulker", 5, 30],
+    ["Quel item lâche le Tatou lorsqu'on le tond avec une brosse ?", "Une écaille de tatou", 5, 30]
   ]
 };

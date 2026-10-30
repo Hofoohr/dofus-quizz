@@ -51,6 +51,26 @@ export default {
     ["Quel est le premier film d'animation nommé à l'Oscar du meilleur film ?", "La Belle et la Bête", 5, 30],
     ["Quel acteur double le Génie dans la version originale d'Aladdin (1992) ?", "Robin Williams", 5, 30],
     ["Comment s'appelle le cheval de Mulan ?", "Khan", 5, 30],
-    ["Comment s'appellent les trois gargouilles du Bossu de Notre-Dame ?", "Victor, Hugo et Laverne", 5, 30]
+    ["Comment s'appellent les trois gargouilles du Bossu de Notre-Dame ?", "Victor, Hugo et Laverne", 5, 30],
+    ["Comment s'appellent les trois hyènes du Roi Lion ?", "Shenzi, Banzai et Ed", 5, 30],
+    ["Comment s'appelle le tigre de compagnie de Jasmine dans Aladdin ?", "Rajah", 5, 30],
+    ["Comment s'appelle le perroquet de Jafar dans Aladdin ?", "Iago", 5, 30],
+    ["Comment s'appelle le fidèle acolyte de Gaston dans La Belle et la Bête ?", "Lefou", 5, 30],
+    ["Comment s'appelle le poisson ami d'Ariel dans La Petite Sirène ?", "Polochon", 5, 30],
+    ["Comment s'appelle le crocodile qui poursuit le capitaine Crochet dans Peter Pan ?", "Tic-Tac", 5, 30],
+    ["Quel est le nom de famille de Miguel dans Coco ?", "Rivera", 5, 30],
+    ["Comment s'appelle la tirelire cochon dans Toy Story ?", "Bayonne", 5, 30],
+    ["Quel est le modèle de voiture de Doc Hudson dans Cars ?", "Une Hudson Hornet", 5, 30],
+    ["Comment s'appelle la dépanneuse amie de Flash McQueen en version française de Cars ?", "Martin", 5, 30],
+    ["Comment s'appelle le frère de Rémy dans Ratatouille ?", "Émile", 5, 30],
+    ["Comment s'appelle la petite fille dans Monstres & Cie en version française ?", "Bouh", 5, 30],
+    ["Quel est le nom complet du rival de Sulley dans Monstres & Cie ?", "Randall Boggs", 5, 30],
+    ["De quel État américain Riley déménage-t-elle dans Vice-Versa ?", "Le Minnesota", 5, 30],
+    ["Comment s'appelle la styliste des super-héros dans Les Indestructibles ?", "Edna Mode", 5, 30],
+    ["Comment s'appelle le grillon porte-bonheur dans Mulan ?", "Cri-Kee", 5, 30],
+    ["Comment s'appelle le cheval de Raiponce ?", "Maximus", 5, 30],
+    ["Quel acteur double Mufasa dans la version originale du Roi Lion (1994) ?", "James Earl Jones", 5, 30],
+    ["Comment s'appellent les trois neveux de Donald ?", "Riri, Fifi et Loulou", 5, 30],
+    ["En quelle année le parc Disneyland de Californie a-t-il ouvert ?", "1955", 5, 30]
   ]
 };
