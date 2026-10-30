@@ -3,6 +3,7 @@ import { QUESTIONS } from "./questions.js";
 import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
 import { classerParTemps, contient, contientProche, memeDofus, aUneFaute } from "./devine.js";
+import { nombre, ecart, memesTypes } from "./panoplie.js";
 import { enregistrerPartie } from "./histo.js";
 import { corrigerSort } from "./autosort.js";
 import { creerScene, caseAViser, lireCase, classementRapide, infosScene, lireScene, PLAGE_VIE, COULEURS } from "./confusion.js";
@@ -25,8 +26,8 @@ const isPixel = q => !!(q && bankOf(q).sprite);
 const isAuto = q => isRank(q) || isClic(q) || isPixel(q);   // corrigées automatiquement, sans le chef
 // Questions « carte » (sous-zone, point d'intérêt, coordonnées) : le chef corrige la sous-zone et le point d'intérêt ; les coordonnées sont
 // classées automatiquement par distance (le plus proche gagne le plus de points). autoChamp : numéro de ce champ, ou -1.
-const autoChamp = q => (q && q.champs && !isRank(q) && bankOf(q).coord != null ? bankOf(q).coord : -1);
-const coordRank = j => { const q = list[j], bk = bankOf(q), k = bk.coord; return classement(allAnswers[j], bk.a[k], Object.keys(players), q.pts / fieldsOf(q).length, k); };
+const autoChamp = q => { const b = q && q.champs && !isRank(q) ? bankOf(q) : null; return b && (b.coord ?? b.niveauChamp) != null ? (b.coord ?? b.niveauChamp) : -1; };
+const coordRank = j => { const q = list[j], bk = bankOf(q), k = bk.coord ?? bk.niveauChamp; return classement(allAnswers[j], bk.a[k], Object.keys(players), q.pts / fieldsOf(q).length, k, bk.niveauChamp != null ? ecart : undefined); };
 const rapideOf = j => classementRapide(allAnswers[j], sceneOf(list[j]), Object.keys(players), list[j].pts);
 const pixelOf = j => classerParTemps(allAnswers[j], Object.keys(players), list[j].pts);
 const pointsOf = (j, id) => isClic(list[j]) ? rapideOf(j)[id].points : isPixel(list[j]) ? pixelOf(j)[id].points : rankOf(j)[id].points;
@@ -199,6 +200,9 @@ function renderCorrection() {
         if (k === bank.coord && expected) {   // champ « coordonnées » : distance à la bonne carte
           const d = texteDistance(a && typeof a === 'object' ? a[k] : null, expected[k]);
           if (d) t += `<small class="dist">${esc(d)}</small>`;
+        } else if (k === bank.niveauChamp && expected) {   // champ « niveau » : écart avec le bon niveau
+          const e = ecart(a && typeof a === 'object' ? a[k] : null, expected[k]);
+          if (e !== null) t += `<small class="dist">${e === 0 ? 'Niveau exact' : 'Écart : ' + e + ' niveau' + (e > 1 ? 'x' : '')}</small>`;
         }
         const etat = cr ? (cr.points > 0 ? 'ok' : 'ko') : val === true ? 'ok' : val === false ? 'ko' : '';
         // la bonne réponse s'affiche toujours à droite de la réponse du joueur, avant les boutons de validation
@@ -317,7 +321,9 @@ function autoCorriger() {
     const a = answers[id], saisie = bk.unique ? (typeof a === 'string' ? a : null) : (a && typeof a === 'object' ? a[k] : null);
     const r = bk.auto === 'sort' ? corrigerSort(k, saisie, expected[k])
       : bk.verif && bk.verif[k] === 'contient' ? contient(saisie, expected[k])
-      : bk.verif && bk.verif[k] === 'proche' ? contientProche(saisie, expected[k]) : undefined;   // undefined : le chef juge (champ descriptif, réponse trop particulière)
+      : bk.verif && bk.verif[k] === 'proche' ? contientProche(saisie, expected[k])
+      : bk.verif && bk.verif[k] === 'nombre' ? (nombre(saisie) !== null && nombre(saisie) === nombre(expected[k]))
+      : bk.verif && bk.verif[k] === 'types' ? memesTypes(saisie, expected[k]) : undefined;   // undefined : le chef juge (champ descriptif, réponse trop particulière)
     if (r !== undefined) maj[`${index}/${id}/${k}`] = r;
   }));
   if (Object.keys(maj).length) update(path('verdicts'), maj).catch(console.error);

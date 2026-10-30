@@ -1,6 +1,8 @@
 // Une question par panoplie (hors cosmétiques) : nombre d'items, types d'items et niveau requis.
 export default {
   cat: "Panoplie",
+  verif: ["nombre", "types", null],   // corrigé automatiquement (js/panoplie.js) : nombre d'items, types d'items ; le niveau est classé par écart (niveauChamp)
+  niveauChamp: 2,
   items: [
     {"q": "Quels items composent la « Panoplie du Bouftou » ?", "champs": [["Nombre d'items", "8"], ["Types d'items (Chapeau, Cape, Anneau…)", "Chapeau, Cape, Amulette, Anneau, Ceinture, Bottes, Arme (Marteau), Bouclier"], ["Niveau requis pour équiper toute la panoplie (le niveau le plus proche gagne les points)", "20"]], "pts": 5, "temps": 50},
     {"q": "Quels items composent la « Panoplie du Kwak de Flammes » ?", "champs": [["Nombre d'items", "7"], ["Types d'items (Chapeau, Cape, Anneau…)", "Chapeau, Cape, Amulette, Anneau, Ceinture, Bottes, Arme (Épée)"], ["Niveau requis pour équiper toute la panoplie (le niveau le plus proche gagne les points)", "42"]], "pts": 5, "temps": 50},
