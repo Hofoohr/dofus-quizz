@@ -22,7 +22,7 @@ const bankOf = q => QUESTIONS.find(x => x.id === q.id) || {};
 const isRank = q => !!(q && bankOf(q).classement);
 const sceneOf = q => lireScene(q.scene, bankOf(q).scene);
 const isClic = q => !!(q && sceneOf(q));
-const isPixel = q => !!(q && bankOf(q).sprite);
+const isPixel = q => !!(q && (bankOf(q).sprite || bankOf(q).images));   // monstre pixelisé ou « 4 images 1 mot » : même correction (le plus rapide à trouver)
 const isAuto = q => isRank(q) || isClic(q) || isPixel(q);   // corrigées automatiquement, sans le chef
 // Questions « carte » (sous-zone, point d'intérêt, coordonnées) : le chef corrige la sous-zone et le point d'intérêt ; les coordonnées sont
 // classées automatiquement par distance (le plus proche gagne le plus de points). autoChamp : numéro de ce champ, ou -1.
@@ -89,10 +89,11 @@ function renderCorrection() {
       `<span class="exp-line">${esc(l)} : <b>${esc(expected && expected[k] != null ? expected[k] : '…')}</b></span>`).join('');
   } else $('c-expected').textContent = expected ?? '…';
   $('c-autonote').hidden = !(bankOf(q).auto === 'sort' || bankOf(q).verif);
-  $('c-sprite').hidden = !isPixel(q);
+  $('c-sprite').hidden = !bankOf(q).sprite; $('c-quatre').hidden = !bankOf(q).images;
   if (isPixel(q)) {
     const bk = bankOf(q), res = pixelOf(index);
-    $('c-sprite').src = bk.sprite;
+    if (bk.sprite) $('c-sprite').src = bk.sprite;
+    if (bk.images) $('c-quatre').innerHTML = bk.images.map(src => `<img src="${esc(src)}" alt="">`).join('');
     $('c-scenebox').hidden = true; $('c-mapbox').hidden = true;
     document.body.classList.remove('large');
     $('c-expected').innerHTML = `<b>${esc(bk.nom)}</b>`;
