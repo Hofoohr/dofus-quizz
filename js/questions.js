@@ -27,10 +27,9 @@ import geoguessr from "./questions/geoguessr.js";
 import confusion from "./questions/confusion.js";
 import monstresPixel from "./questions/monstres-pixel.js";
 import croquettes from "./questions/croquettes.js";
-import quatreImages from "./questions/quatre-images.js";
 import { caseAViser } from "./confusion.js";
 
-const CATEGORIES = [quetes, quetesDofus, sorts, panoplies, dofus, legendaires, succesDonjons, donjons, metiers, cartes, geoguessr, confusion, monstresPixel, croquettes, quatreImages];
+const CATEGORIES = [quetes, quetesDofus, sorts, panoplies, dofus, legendaires, succesDonjons, donjons, metiers, cartes, geoguessr, confusion, monstresPixel, croquettes];
 
 // Clé stable d'une question pour les statistiques (ne dépend pas de la place de la question dans la banque) : empreinte de son contenu.
 const empreinte = s => {
@@ -44,13 +43,12 @@ export const QUESTIONS = CATEGORIES.flatMap((c, ci) =>
     const id = `c${ci}q${i}`;
     let o;
     if (Array.isArray(it)) { const [q, a, pts, temps, groupe, verif] = it; o = { id, type: "simple", cat: c.cat, q, a, pts, temps, groupe, verif }; }
-    else if (it.images) o = { id, type: "quatre", cat: c.cat, q: it.q, a: it.mot, nom: it.mot, images: it.images, pts: it.pts, temps: it.temps };   // « 4 images 1 mot » : même protocole que « Monstre pixelisé »
     else if (it.sprite) o = { id, type: "pixel", cat: c.cat, q: it.q, a: it.nom, nom: it.nom, sprite: it.sprite, pts: it.pts, temps: it.temps };
     else if (it.scene) o = { id, type: "clic", cat: c.cat, q: it.q, a: caseAViser(it.scene).join(","), pts: it.pts, temps: it.temps, scene: it.scene };
     else o = { id, type: "multi", cat: c.cat, q: it.q, champs: it.champs.map(f => f[0]), a: it.champs.map(f => f[1]), pts: it.pts, temps: it.temps, img: it.img, coord: it.coord, classement: it.classement, verif: it.verif, unique: it.unique };
     if (c.niveauChamp != null) o.niveauChamp = c.niveauChamp;   // champ numéroté « niveau » : le plus proche gagne (classement automatique)
     if (c.verif && !o.verif) o.verif = c.verif;   // vérification automatique définie pour toute la catégorie
     if (c.auto) o.auto = c.auto;   // catégorie corrigée automatiquement (ex. : « sort »)
-    o.cle = empreinte([c.cat, o.q, [].concat(o.a).join('|'), o.img || o.sprite || (o.images ? o.images.join() : '') || (o.scene ? JSON.stringify(o.scene) : '')].join('#'));   // identifiant stable pour les statistiques
+    o.cle = empreinte([c.cat, o.q, [].concat(o.a).join('|'), o.img || o.sprite || (o.scene ? JSON.stringify(o.scene) : '')].join('#'));   // identifiant stable pour les statistiques
     return o;
   }));

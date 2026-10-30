@@ -200,6 +200,3 @@ input[type=radio],input[type=checkbox]{width:auto;margin:0 .4rem 0 0;vertical-al
 .row.rank .ans.uni{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.2rem .8rem}
 .row.rank .ans.uni .rep{min-width:0;overflow-wrap:anywhere}
 .row.rank .ans.uni .bonne{margin-left:auto;color:var(--good);font-weight:600;text-align:right;overflow-wrap:anywhere}
-.quatre{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;max-width:420px;margin:.5rem auto}
-.quatre img{display:block;width:100%;background:#e8e2cc;border-radius:8px}
-#p-quatre-hint{text-align:center;letter-spacing:.15em;font-size:1.1rem}

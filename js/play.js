@@ -37,18 +37,15 @@ function drawPin() {
 const sceneOf = q => lireScene(q.scene, bankOf(q).scene);   // la scène publiée avec la question, sinon celle de la banque locale
 const isClic = q => !!sceneOf(q);
 // « Monstre pixelisé » : image qui se précise, nom exact à taper (essais illimités). On n'enregistre que la réussite : « ok@ms ».
-const isQuatre = q => !!bankOf(q).images;                // « 4 images 1 mot » : même jeu que le monstre pixelisé, avec 4 images fixes
-const isPixel = q => !!bankOf(q).sprite || isQuatre(q);   // « trouver un nom » : essais illimités, le plus rapide gagne
+const isPixel = q => !!bankOf(q).sprite;
 let pixelImg = null, trouveMs = null, essais = 0, trouveSaisie = '';
 const NOMS_MONSTRES = new Set(QUESTIONS.filter(q => q.type === 'pixel').map(q => normaliser(q.nom)));   // pour refuser le nom exact d'un autre monstre
-const MOTS_QUATRE = new Set(QUESTIONS.filter(q => q.type === 'quatre').map(q => normaliser(q.nom)));      // idem pour les mots de « 4 images 1 mot »
-const autresNoms = q => (isQuatre(q) ? MOTS_QUATRE : NOMS_MONSTRES);
 function essayer() {
   if (cur === null || lockedFor === cur || trouveMs !== null || !isPixel(list[cur])) return;
   const saisie = $('p-answer').value;
   if (!saisie.trim()) return;
   essais++;
-  if (estBonNom(bankOf(list[cur]).nom, saisie, autresNoms(list[cur]))) {
+  if (estBonNom(bankOf(list[cur]).nom, saisie, NOMS_MONSTRES)) {
     trouveSaisie = saisie.trim().slice(0, 60);
     trouveMs = Math.max(0, Math.round(serverNow() - sched[cur].start));
     $('p-answer').disabled = true; $('p-try').disabled = true;
@@ -57,7 +54,7 @@ function essayer() {
     // Trouvé : on se met automatiquement « prêt ». Quand tout le monde est prêt (donc a trouvé), la question suivante arrive toute seule.
     set(ref(db, `rooms/${ctx.code}/ready/${cur}/${ctx.uid}`), true).catch(console.error);
   } else {
-    const proche = presque(bankOf(list[cur]).nom, saisie, autresNoms(list[cur]));
+    const proche = presque(bankOf(list[cur]).nom, saisie, NOMS_MONSTRES);
     $('p-pixelmsg').className = 'hint bad'; $('p-pixelmsg').textContent = proche ? `🔥 Tu y es presque ! « ${saisie.trim()} » n'est pas tout à fait ça (essai ${essais}).` : `❌ Ce n'est pas « ${saisie.trim()} » (essai ${essais}). Réessaie !`;
     $('p-answer').select();
     saveNow(cur);   // on garde le compte des essais (affiché pour le plaisir en correction)
@@ -65,12 +62,10 @@ function essayer() {
 }
 // Affiche le sprite : pixelisé selon le temps écoulé, net une fois trouvé (ou quand le temps est écoulé).
 function majPixel(now = serverNow()) {
-  if (cur === null || !isPixel(list[cur])) return;
-  if (pixelImg && !isQuatre(list[cur])) {
-    const duree = list[cur].temps * 1000, ms = now - sched[cur].start;
-    const fini = trouveMs !== null || lockedFor === cur;
-    dessinerPixel($('p-pixel'), pixelImg, fini ? TAILLE_MAX : blocs(ms, duree));
-  }
+  if (cur === null || !pixelImg || !isPixel(list[cur])) return;
+  const duree = list[cur].temps * 1000, ms = now - sched[cur].start;
+  const fini = trouveMs !== null || lockedFor === cur;
+  dessinerPixel($('p-pixel'), pixelImg, fini ? TAILLE_MAX : blocs(ms, duree));
   if (trouveMs !== null) { $('p-pixelmsg').className = 'hint good'; $('p-pixelmsg').textContent = `✅ Trouvé en ${String(Math.round(trouveMs / 100) / 10).replace('.', ',')} s : c'est « ${bankOf(list[cur]).nom} »${trouveSaisie && aUneFaute(bankOf(list[cur]).nom, trouveSaisie) ? ` (tu avais écrit « ${trouveSaisie} » : accepté, avec une faute)` : ' !'}`; }
 }
 $('p-try').onclick = essayer;
@@ -136,16 +131,10 @@ function openQuestion(i) {
   const input = $('p-answer');
   input.hidden = !!fields; $('p-fields').hidden = !fields || rank;
   $('p-mapbox').hidden = !rank;
-  const clic = isClic(q), pixel = isPixel(q), quatre = isQuatre(q);
-  $('p-pixelbox').hidden = !pixel || quatre; $('p-try').hidden = !pixel; $('p-try').disabled = false; $('p-pixelmsg').hidden = !pixel;
-  $('p-quatre').hidden = !quatre;
-  if (quatre) {
-    $('p-quatre-imgs').innerHTML = bankOf(q).images.map(src => `<img src="${esc(src)}" alt="" draggable="false">`).join('');
-    $('p-quatre-hint').textContent = `Un mot de ${normaliser(bankOf(q).nom).length} lettres : ` + '_ '.repeat(normaliser(bankOf(q).nom).length).trim();
-  }
-  trouveMs = null; essais = 0; trouveSaisie = ''; $('p-pixelmsg').className = 'hint';
-  $('p-pixelmsg').textContent = quatre ? 'Écris le mot que ces 4 monstres ont en commun dans leur nom (majuscules, accents et une lettre de différence sont acceptés) : autant d\'essais que tu veux !' : 'Tape le nom du monstre (majuscules, accents et une lettre de différence est acceptée) : autant d\'essais que tu veux !';
-  if (pixel && !quatre) { pixelImg = Object.assign(new Image(), { src: bankOf(q).sprite }); pixelImg.onload = () => majPixel(); majPixel(); }
+  const clic = isClic(q), pixel = isPixel(q);
+  $('p-pixelbox').hidden = !pixel; $('p-try').hidden = !pixel; $('p-try').disabled = false;
+  trouveMs = null; essais = 0; trouveSaisie = ''; $('p-pixelmsg').className = 'hint'; $('p-pixelmsg').textContent = 'Tape le nom du monstre (majuscules, accents et une lettre de différence est acceptée) : autant d\'essais que tu veux !';
+  if (pixel) { pixelImg = Object.assign(new Image(), { src: bankOf(q).sprite }); pixelImg.onload = () => majPixel(); majPixel(); }
   $('p-scenebox').hidden = true;   // affichée par tick() une fois l'annonce terminée
   $('p-rush').hidden = !clic;
   document.body.classList.toggle('large', clic);   // la grille est plus large que les autres écrans

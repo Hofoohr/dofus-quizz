@@ -9,7 +9,6 @@ let stats = {}, affiches = PAR_PAGE;
 
 // Texte affiché pour une question de la banque.
 function libelle(q) {
-  if (q.type === 'quatre') return `4 images 1 mot : ${q.nom}`;
   if (q.type === 'pixel') return `Monstre pixelisé : ${q.nom}`;
   if (q.type === 'clic') return `Confusion horaire (vie ${q.scene.pv} %, ${q.scene.conf === 'rouge' ? '90°' : q.scene.conf === 'bleue' ? '180°' : '270°'}) : Comte en ${q.scene.c.join(', ')}`;
   if (q.champs && q.classement) return `GeoGuessr : carte en ${q.a[0]}`;
