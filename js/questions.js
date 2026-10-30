@@ -30,9 +30,10 @@ import croquettes from "./questions/croquettes.js";
 import minecraft from "./questions/minecraft.js";
 import disney from "./questions/disney.js";
 import pokemonPixel from "./questions/pokemon-pixel.js";
+import animauxPixel from "./questions/animaux-pixel.js";
 import { caseAViser } from "./confusion.js";
 
-const CATEGORIES = [quetes, quetesDofus, sorts, panoplies, dofus, legendaires, succesDonjons, donjons, metiers, cartes, geoguessr, confusion, monstresPixel, croquettes, minecraft, disney, pokemonPixel];
+const CATEGORIES = [quetes, quetesDofus, sorts, panoplies, dofus, legendaires, succesDonjons, donjons, metiers, cartes, geoguessr, confusion, monstresPixel, croquettes, minecraft, disney, pokemonPixel, animauxPixel];
 
 // Clé stable d'une question pour les statistiques (ne dépend pas de la place de la question dans la banque) : empreinte de son contenu.
 const empreinte = s => {
