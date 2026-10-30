@@ -84,7 +84,7 @@ function renderCorrection() {
   if (bank.img) $('c-img').src = bank.img; else $('c-img').removeAttribute('src');
   const fields = fieldsOf(q);
   if (fields) {
-    $('c-expected').innerHTML = fields.map((l, k) =>
+    $('c-expected').innerHTML = fields.filter((_, k) => !(k > 0 && bank.verif === 'nom-legende')).map((l, k) =>
       `<span class="exp-line">${esc(l)} : <b>${esc(expected && expected[k] != null ? expected[k] : '…')}</b></span>`).join('');
   } else $('c-expected').textContent = expected ?? '…';
   $('c-autonote').hidden = !(bankOf(q).auto === 'sort' || bankOf(q).verif);
@@ -181,7 +181,7 @@ function renderCorrection() {
         : `<span class="badge">${etat === 'plein' ? '✅' : etat === 'moitie' ? '🟡' : etat === 'rien' ? '❌' : '…'}</span>`;
       const dit = typeof a === 'string' && a !== '' ? esc(a) : '<i>(pas de réponse)</i>';
       return `<li class="row rank ${etat === 'plein' ? 'ok' : etat === 'moitie' ? 'jaune' : etat === 'rien' ? 'ko' : ''}"><div class="who"><b>${esc(players[id].name)}${id === ctx.uid ? ' <small>(toi)</small>' : ''}</b><span>${pts === null ? '…' : '+' + String(pts).replace('.', ',') + ' pt' + (pts >= 2 ? 's' : '')}</span></div>
-        <div class="ans uni"><span class="rep">${dit}</span>${expected ? `<span class="bonne">→ ${esc(expected[0])} / ${esc(expected[1])}</span>` : ''}</div><div class="verdict">${verdict}</div></li>`;
+        <div class="ans uni"><span class="rep">${dit}</span>${expected ? `<span class="bonne">→ ${esc(expected[0])}</span>` : ''}</div><div class="verdict">${verdict}</div></li>`;
     }
     if (fields) {
       const mine = v[id] && typeof v[id] === 'object' ? v[id] : {};
