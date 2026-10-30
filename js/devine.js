@@ -32,6 +32,21 @@ export const contientProche = (saisie, attendu) => {
   return false;
 };
 
+// Légende d'un équipement : le nom de la légende (« Destin » pour « Légende du Destin ») doit être écrit EN PLUS du nom de l'item, à une lettre près.
+// Comme la légende est souvent un morceau du nom de l'item (« Ciseaux du Destin »), on retire d'abord le nom de l'item trouvé dans la réponse.
+export const contientLegende = (saisie, nomItem, legende) => {
+  const n = normaliser(saisie), t = normaliser(nomItem);
+  let reste = n;
+  const tol = tolerance(t.length);
+  const pos = n.indexOf(t);
+  if (t !== '' && pos >= 0) reste = n.slice(0, pos) + n.slice(pos + t.length);
+  else if (t !== '' && tol > 0) {
+    outer: for (let len = t.length - tol; len <= t.length + tol; len++)
+      for (let i = 0; i + len <= n.length; i++) if (distance(n.slice(i, i + len), t) <= tol) { reste = n.slice(0, i) + n.slice(i + len); break outer; }
+  }
+  return contientProche(reste, legende);
+};
+
 // Réponse acceptée : le nom exact, ou assez proche (voir tolerance). « autres » : ensemble des noms normalisés de tous les monstres ; une réponse qui est
 // exactement le nom d'un AUTRE monstre est refusée (« Bwork » ne vaut pas « Bworkette »).
 export const estBonNom = (nom, saisie, autres = new Set()) => {
