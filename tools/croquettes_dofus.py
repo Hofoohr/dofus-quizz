@@ -60,12 +60,13 @@ def main():
             print(f"  ! {nom} : pouvoirs {pouvoirs}, légendes {legendes} (ignorée)", file=sys.stderr)
             continue
         pnom, texte = effet(pouvoirs[0])
+        court = re.sub(r"^Croquette infusée (?:du |de la |de l'|de |d')", "", nom)   # « Croquette infusée du Craqueleur » -> « Craqueleur »
         items.append({"q": f"Quel est l'effet de la « {nom} » ?",
                       "champs": [[CHAMP_EFFET, f"{pnom} : {texte}"], [CHAMP_LEGENDE, legendes[0]]], "pts": PTS, "temps": TEMPS_EFFET,
                       "verif": [None, "contient"]})   # l'effet est jugé par le chef ; la légende est vérifiée automatiquement
         items.append({"q": f"Quelle croquette infusée a cet effet : {texte}",
-                      "champs": [["Nom de la croquette (la moitié des points)", nom], [CHAMP_LEGENDE, legendes[0]]], "pts": PTS, "temps": TEMPS_NOM,
-                      "verif": ["contient", "contient"]})   # nom complet et légende : vérifiés automatiquement
+                      "champs": [["Nom de la croquette, sans « croquette infusée » (la moitié des points)", court], [CHAMP_LEGENDE, legendes[0]]], "pts": PTS, "temps": TEMPS_NOM,
+                      "verif": ["proche", "contient"]})   # nom (une lettre d'écart acceptée) et légende : vérifiés automatiquement
     lignes = ["    " + json.dumps(i, ensure_ascii=False) + "," for i in items]
     (ROOT / "js/questions/croquettes.js").write_text(
         "// Fichier généré par tools/croquettes_dofus.py : ne pas modifier à la main (relancer le script).\n"
