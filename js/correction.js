@@ -182,7 +182,7 @@ function renderCorrection() {
         : `<span class="badge">${etat === 'plein' ? '✅' : etat === 'moitie' ? '🟡' : etat === 'rien' ? '❌' : '…'}</span>`;
       const dit = typeof a === 'string' && a !== '' ? esc(a) : '<i>(pas de réponse)</i>';
       return `<li class="row rank ${etat === 'plein' ? 'ok' : etat === 'moitie' ? 'jaune' : etat === 'rien' ? 'ko' : ''}"><div class="who"><b>${esc(players[id].name)}${id === ctx.uid ? ' <small>(toi)</small>' : ''}</b><span>${pts === null ? '…' : '+' + String(pts).replace('.', ',') + ' pt' + (pts >= 2 ? 's' : '')}</span></div>
-        <div class="ans uni"><span class="rep">${dit}</span>${expected ? `<span class="bonne">→ ${esc(expected[0])}</span>` : ''}</div><div class="verdict">${verdict}</div></li>`;
+        <div class="ans uni"><span class="rep">${dit}</span></div><div class="verdict">${verdict}</div></li>`;
     }
     if (fields) {
       const mine = v[id] && typeof v[id] === 'object' ? v[id] : {};
@@ -205,9 +205,7 @@ function renderCorrection() {
           if (e !== null) t += `<small class="dist">${e === 0 ? 'Niveau exact' : 'Écart : ' + e + ' niveau' + (e > 1 ? 'x' : '')}</small>`;
         }
         const etat = cr ? (cr.points > 0 ? 'ok' : 'ko') : val === true ? 'ok' : val === false ? 'ko' : '';
-        // la bonne réponse s'affiche toujours à droite de la réponse du joueur, avant les boutons de validation
-        const bonne = !cr && expected && expected[k] != null ? `<span class="bonne">→ ${esc(expected[k])}</span>` : '';
-        return `<div class="sub ${etat}"><span class="lbl">${esc(label)}</span><span class="ans"><span class="rep">${t}</span>${bonne}</span><span class="verdict">${verdict}</span></div>`;
+        return `<div class="sub ${etat}"><span class="lbl">${esc(label)}</span><span class="ans"><span class="rep">${t}</span></span><span class="verdict">${verdict}</span></div>`;
       }).join('');
       return `<li class="row multi"><div class="who"><b>${esc(players[id].name)}</b>${id === ctx.uid ? ' <small>(toi)</small>' : ''}${got === null ? '' : `<span>${got} / ${fields.length - (autoChamp(q) >= 0 ? 1 : 0)}</span>`}</div>${subs}</li>`;
     }
