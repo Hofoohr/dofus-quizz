@@ -1,7 +1,7 @@
 // Tirage des questions d'une partie.
 // Chaque question pèse 1, sauf celles qui ont un « groupe » (ex. : le Dofus d'une question de quêtes) :
 // dans une même catégorie, tous les groupes ont autant de chances d'être tirés, quelle que soit leur taille.
-// La masse totale de la catégorie ne change pas : elle est seulement répartie à parts égales entre les groupes.
+// La masse totale de la catégorie ne change pas : elle est seulement répartie à parts égales entre les groupes (puis entre les questions du groupe selon leur « rel »).
 // Retourne les questions dans un ordre aléatoire pondéré : on prend les n premières.
 export function melange(questions) {
   const stats = {};   // catégorie -> { total, tailles: { groupe: nombre de questions } }
@@ -9,12 +9,12 @@ export function melange(questions) {
     if (!q.groupe) continue;
     const s = stats[q.cat] ??= { total: 0, tailles: {} };
     s.total++;
-    s.tailles[q.groupe] = (s.tailles[q.groupe] || 0) + 1;
+    s.tailles[q.groupe] = (s.tailles[q.groupe] || 0) + (q.rel ?? 1);   // « rel » : poids relatif d'une question dans son groupe (1 par défaut)
   }
   const poids = q => {
     if (!q.groupe) return 1;
     const s = stats[q.cat];
-    return s.total / (Object.keys(s.tailles).length * s.tailles[q.groupe]);
+    return s.total * (q.rel ?? 1) / (Object.keys(s.tailles).length * s.tailles[q.groupe]);
   };
   // Tirage pondéré sans remise (Efraimidis–Spirakis) : on trie par u^(1/poids) décroissant.
   return questions

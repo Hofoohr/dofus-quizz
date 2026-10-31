@@ -12,7 +12,7 @@ const forme = t => {
 };
 
 // Premier nombre écrit dans la réponse (« 8 », « 8 items », « huit » n'est pas lu), ou null.
-export const nombre = s => { const m = /-?\d+/.exec(String(s ?? '')); return m ? Number(m[0]) : null; };
+export const nombre = s => { const m = /-?\d+/.exec(String(s ?? '').replace(/(\d)[\s\u00a0\u202f.](?=\d{3}(?!\d))/g, '$1')); return m ? Number(m[0]) : null; };   // « 4 751 » et « 4.751 » = 4751
 // Écart entre le niveau écrit et le bon niveau (pour classer les joueurs : le plus proche gagne), ou null.
 export const ecart = (saisie, attendu) => { const x = nombre(saisie), y = nombre(attendu); return x === null || y === null ? null : Math.abs(x - y); };
 

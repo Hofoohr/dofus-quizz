@@ -202,12 +202,12 @@ function renderCorrection() {
           if (d) t += `<small class="dist">${esc(d)}</small>`;
         } else if (k === bank.niveauChamp && expected) {   // champ « niveau » : écart avec le bon niveau
           const e = ecart(a && typeof a === 'object' ? a[k] : null, expected[k]);
-          if (e !== null) t += `<small class="dist">${e === 0 ? 'Niveau exact' : 'Écart : ' + e + ' niveau' + (e > 1 ? 'x' : '')}</small>`;
+          if (e !== null) t += `<small class="dist">${e === 0 ? (bank.unite ? 'Exact' : 'Niveau exact') : 'Écart : ' + e + ' ' + (bank.unite || 'niveau') + (e > 1 && !bank.unite ? 'x' : e > 1 ? 's' : '')}</small>`;
         }
         const etat = cr ? (cr.points > 0 ? 'ok' : 'ko') : val === true ? 'ok' : val === false ? 'ko' : '';
         return `<div class="sub ${etat}"><span class="lbl">${esc(label)}</span><span class="ans"><span class="rep">${t}</span></span><span class="verdict">${verdict}</span></div>`;
       }).join('');
-      return `<li class="row multi"><div class="who"><b>${esc(players[id].name)}</b>${id === ctx.uid ? ' <small>(toi)</small>' : ''}${got === null ? '' : `<span>${got} / ${fields.length - (autoChamp(q) >= 0 ? 1 : 0)}</span>`}</div>${subs}</li>`;
+      return `<li class="row multi"><div class="who"><b>${esc(players[id].name)}</b>${id === ctx.uid ? ' <small>(toi)</small>' : ''}${got === null || fields.length - (autoChamp(q) >= 0 ? 1 : 0) === 0 ? '' : `<span>${got} / ${fields.length - (autoChamp(q) >= 0 ? 1 : 0)}</span>`}</div>${subs}</li>`;
     }
     const val = v[id];
     const verdict = ctx.isHost
@@ -245,7 +245,7 @@ async function enregistrerStats() {
       } else {
         const nb = fieldsOf(q) ? fieldsOf(q).length : 1;
         const ac = autoChamp(q) >= 0, cr = ac ? coordRank(j) : null;
-        const seuil = bk.niveauChamp != null ? 10 : 1e-9;   // panoplie : réussi si le niveau est à moins de 10 niveaux ; carte : coordonnées exactes   // réussi = champs du chef justes ET (carte : coordonnées exactes ; panoplie : niveau à moins de 10 niveaux)
+        const seuil = bk.seuil ?? (bk.niveauChamp != null ? 10 : 1e-9);   // panoplie : réussi si le niveau est à moins de 10 niveaux ; carte : coordonnées exactes   // réussi = champs du chef justes ET (carte : coordonnées exactes ; panoplie : niveau à moins de 10 niveaux)
         ids.forEach(id => { const r = result(q, (verr[j] || {})[id]); if (r === null) return; n++; ok += r === nb - (ac ? 1 : 0) && (!ac || (cr[id].d !== null && cr[id].d < seuil)) ? 1 : 0; });   // pas de verdict du chef : non compté
       }
       return n ? { cle: bk.cle, n, ok } : null;
