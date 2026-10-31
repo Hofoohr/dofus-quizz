@@ -13,6 +13,14 @@
         "$other": { ".validate": false }
       }
     },
+    // Personnes en ligne : chaque onglet s'inscrit sous son identifiant (presence/<uid>/<onglet> = true) et est retiré à la déconnexion.
+    "presence": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        "$tab": { ".validate": "newData.isBoolean() && $tab.length <= 10" }
+      }
+    },
     // Statistiques de réussite par question (clé = empreinte du contenu de la question) : lisibles par tous, incrémentées par le chef en fin de partie.
     "stats": {
       ".read": "auth != null",

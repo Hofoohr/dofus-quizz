@@ -46,6 +46,7 @@ fieldset{border:1px solid var(--line);border-radius:8px;margin:0 0 1.2rem}
 #players li span{min-width:0;overflow-wrap:anywhere}
 .kick{flex:none;padding:.25rem .6rem;border:1px solid var(--bad);border-radius:6px;background:none;color:var(--bad);font:inherit;font-size:.85rem;cursor:pointer}
 #app.wide{max-width:960px}
+.online{margin:-.4rem 0 1rem;text-align:center;font-size:.85rem;color:var(--good);min-height:1.2em}
 .stats-link{margin:1rem 0 0;text-align:center;font-size:.8rem} .stats-link a,.hint a{color:var(--muted)}
 .s-resume{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem;margin:1rem 0}
 .s-resume div{display:flex;flex-direction:column;padding:.5rem .7rem;background:var(--bg);border:1px solid var(--line);border-radius:8px}

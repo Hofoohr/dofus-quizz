@@ -6,6 +6,7 @@ import { composer } from "./tirage.js";
 import * as Geo from "./geo.js";
 import * as Chat from "./chat.js";
 import * as Salons from "./salons.js";
+import { enLigne } from "./presence.js";
 
 const MIN_PLAYERS = 1;   // mets 3 quand tu auras fini de tester seul
 const MAX_PLAYERS = 10;  // limite vérifiée par l'application (les règles de la base ne peuvent pas compter les joueurs)
@@ -271,6 +272,7 @@ $('gr-home').onclick = replay;
 
 signIn().then(user => {
   uid = user.uid;
+  enLigne(uid, n => { $('online').textContent = n ? `🟢 ${n} personne${n > 1 ? 's' : ''} en ligne` : ''; });
   Salons.startList(c => { $('code').value = c; $('join').click(); }, MAX_PLAYERS);
   $('create').disabled = false;
   $('join').disabled = false;
