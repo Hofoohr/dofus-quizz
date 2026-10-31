@@ -1,7 +1,15 @@
 // Correction automatique de la catégorie « Panoplie » : nombre d'items, types d'items (liste dans le désordre), niveau (le plus proche gagne).
 
 const sans = s => String(s ?? '').toLowerCase().replace(/œ/g, 'oe').normalize('NFD').replace(/[̀-ͯ]/g, '');
-const forme = t => sans(t).replace(/[^a-z0-9]/g, '').replace(/(s|x)$/, '');   // « Bottes » = « botte », « anneaux » = « anneau »
+const TYPES = ['chapeau', 'cape', 'amulette', 'anneau', 'ceinture', 'botte', 'arme', 'bouclier', 'familier'];
+const SYNONYMES = { coiffe: 'chapeau', coiffure: 'chapeau', casque: 'chapeau', capuche: 'chapeau', bottine: 'botte', botte: 'botte', amu: 'amulette', collier: 'amulette' };
+// « Bottes » = « botte », « anneaux » = « anneau », « coiffe » = « chapeau », « amu » = « amulette » (début d'un seul type, 3 lettres ou plus)
+const forme = t => {
+  const f = sans(t).replace(/[^a-z0-9]/g, '').replace(/(s|x)$/, '');
+  if (SYNONYMES[f]) return SYNONYMES[f];
+  const debut = f.length >= 3 ? TYPES.filter(x => x.startsWith(f)) : [];
+  return debut.length === 1 ? debut[0] : f;
+};
 
 // Premier nombre écrit dans la réponse (« 8 », « 8 items », « huit » n'est pas lu), ou null.
 export const nombre = s => { const m = /-?\d+/.exec(String(s ?? '')); return m ? Number(m[0]) : null; };
@@ -9,14 +17,27 @@ export const nombre = s => { const m = /-?\d+/.exec(String(s ?? '')); return m ?
 export const ecart = (saisie, attendu) => { const x = nombre(saisie), y = nombre(attendu); return x === null || y === null ? null : Math.abs(x - y); };
 
 // Éléments d'une liste : séparés par « , », « ; », « / » ou « et », sauf à l'intérieur de parenthèses (« Arme (Hache, Marteau) » est un seul élément).
-function elements(s) {
+// Avec « libre » (réponse du joueur), les espaces séparent aussi : « amu coiffe cape anneau botte » ; « 2 anneaux » et « anneau x2 » restent groupés.
+function elements(s, libre = false) {
+  s = String(s ?? '');
+  if (libre) s = s.replace(/\s+\(/g, '(');
   const out = []; let cur = '', depth = 0;
-  for (const c of String(s ?? '')) {
+  for (const c of s) {
     if (c === '(') depth++; else if (c === ')') depth = Math.max(0, depth - 1);
-    if (depth === 0 && (c === ',' || c === ';' || c === '/')) { out.push(cur); cur = ''; } else cur += c;
+    if (depth === 0 && (c === ',' || c === ';' || c === '/' || (libre && /\s/.test(c)))) { out.push(cur); cur = ''; } else cur += c;
   }
   out.push(cur);
-  return out.flatMap(e => (/\(/.test(e) ? [e] : e.split(/\s+et\s+/i))).map(e => e.trim()).filter(Boolean);
+  const liste = out.map(e => e.trim()).filter(Boolean);
+  if (!libre) return liste.flatMap(e => (/\(/.test(e) ? [e] : e.split(/\s+et\s+/i))).map(e => e.trim()).filter(Boolean);
+  const res = []; let nb = '';
+  for (const mot of liste) {
+    if (/^\d+$/.test(mot)) { nb = mot; continue; }
+    const x = /^[×x](\d+)$/i.exec(mot);
+    if (x && res.length) { res[res.length - 1] += ` ×${x[1]}`; continue; }
+    if (/^(et|ou|\+|&)$/i.test(mot)) continue;
+    res.push((nb ? `${nb} ` : '') + mot); nb = '';
+  }
+  return res;
 }
 // Un élément : { formes: écritures acceptées, n: combien } (« Anneau ×2 », « 2 anneaux », « Arme (Épée) »).
 function lire(e, joueur = false) {
@@ -35,7 +56,7 @@ function lire(e, joueur = false) {
 // Les types écrits par le joueur sont-ils exactement ceux de la panoplie (même nombre de chaque, ordre libre, pluriels acceptés) ?
 export function memesTypes(saisie, attendu) {
   const creux = elements(attendu).map(lire);   // places à remplir
-  const mots = elements(saisie).map(e => lire(e, true));
+  const mots = elements(saisie, true).map(e => lire(e, true));
   if (!mots.length) return false;
   for (const m of mots) {
     // une écriture du joueur compte pour une place libre dont les formes contiennent l'une des siennes
