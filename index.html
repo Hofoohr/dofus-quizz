@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quizz Culture &amp; GeoGuessr Dofus</title>
+<meta name="description" content="Quizz Dofus multijoueur : quêtes, sorts, panoplies, donjons, GeoGuessr et plus. Gratuit, sans compte.">
+<meta name="theme-color" content="#14172b">
+<link rel="icon" type="image/png" href="img/logo.png">
+<meta property="og:title" content="Quizz Culture Dofus">
+<meta property="og:description" content="Quizz Dofus multijoueur : quêtes, sorts, panoplies, donjons, GeoGuessr et plus. Gratuit, sans compte.">
+<meta property="og:image" content="https://hofoohr.github.io/dofus-quizz/img/logo.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -11,25 +17,71 @@
 <main id="app">
 
   <section id="screen-home" class="screen active">
-    <a class="discord" href="https://discord.gg/sUwsVN7wQ" target="_blank" rel="noopener noreferrer" title="Rejoindre le Discord"><img src="img/discord.png" alt="Rejoindre le Discord"></a>
-    <h1>Quizz Culture</h1>
-    <p class="lead">Quizz de dofus ou GeoGuessr Dofus</p>
-    <p id="online" class="online"></p>
-    <label class="field">Ton pseudo
-      <input id="pseudo" maxlength="20" placeholder="Pseudo" autocomplete="off">
-    </label>
-    <label class="chk pub"><input type="checkbox" id="make-public" checked> Salon public</label>
-    <button id="create" class="btn" disabled>Créer un salon</button>
-    <div class="or">ou</div>
-    <div class="join">
-      <input id="code" maxlength="4" placeholder="CODE" autocomplete="off">
-      <button id="join" class="btn" disabled>Rejoindre</button>
+    <header class="hero">
+      <a class="discord" href="https://discord.gg/sUwsVN7wQ" target="_blank" rel="noopener noreferrer" title="Rejoindre le Discord"><img src="img/discord.png" alt="Rejoindre le Discord"></a>
+      <h1>Quizz Culture</h1>
+      <p class="lead">Quizz de dofus ou GeoGuessr Dofus</p>
+      <p id="online" class="online"></p>
+    </header>
+
+    <div class="panel">
+      <label class="field">Ton pseudo
+        <input id="pseudo" maxlength="20" placeholder="Pseudo" autocomplete="off">
+      </label>
     </div>
+
+    <div class="panel main">
+      <h2><img src="img/dofus.png" class="emoji" alt=""> Quizz multijoueur</h2>
+      <label class="chk pub"><input type="checkbox" id="make-public" checked> Salon public</label>
+      <button id="create" class="btn" disabled>Créer un salon</button>
+      <div class="or">ou</div>
+      <div class="join">
+        <input id="code" maxlength="4" placeholder="CODE" autocomplete="off">
+        <button id="join" class="btn" disabled>Rejoindre</button>
+      </div>
+      <div id="open-rooms" hidden>
+        <h3>Salons ouverts</h3>
+        <ul id="open-list"></ul>
+      </div>
+    </div>
+
+    <div class="panel solo">
+      <h2>⚡ Mode solo : confusion en chaîne</h2>
+      <p class="hint">Enchaîne les confusions horaires le plus longtemps possible et grimpe dans le ladder.</p>
+      <ol id="solo-top3" class="ladder" hidden></ol>
+      <button id="solo-open" class="btn alt" disabled>Jouer en solo</button>
+    </div>
+
     <p class="stats-link"><a href="stats.html">Statistiques</a> · <a href="historique.html">Historique</a></p>
-    <div id="open-rooms" hidden>
-      <h2>Salons ouverts</h2>
-      <ul id="open-list"></ul>
+  </section>
+
+  <section id="screen-solo" class="screen">
+    <div id="so-intro">
+      <h1>⚡ Confusion en chaîne</h1>
+      <p class="lead">Touche le Comte Harebourg malgré la confusion horaire, scène après scène.</p>
+      <ul class="regles">
+        <li>Tu commences avec <b>5 secondes</b> par scène.</li>
+        <li>Chaque réussite te fait perdre <b>5 % de temps</b> en plus.</li>
+        <li>Seul ton <b>premier clic</b> compte : une erreur ou le temps écoulé met fin à la série.</li>
+        <li>Ton score est le nombre de confusions enchaînées.</li>
+      </ul>
+      <button id="so-start" class="btn">Commencer</button>
     </div>
+    <div id="so-play" hidden>
+      <div class="top"><b id="so-score">Série : 0</b><span id="so-time"></span></div>
+      <div class="timer"><i id="so-fill"></i></div>
+      <div id="so-count" class="rush big-count" hidden></div>
+      <div id="so-conf"></div>
+      <div id="so-scenewrap" class="scenewrap" hidden><canvas id="so-scene" class="scene fit"></canvas></div>
+    </div>
+    <div id="so-over" class="panel over" hidden>
+      <h2 id="so-title"></h2>
+      <p id="so-msg" class="lead"></p>
+      <button id="so-retry" class="btn">Rejouer</button>
+    </div>
+    <h2>🏆 Ladder <small id="so-record"></small></h2>
+    <ol id="so-ladder" class="ladder"></ol>
+    <button id="so-home" class="btn ghost">← Retour à l'accueil</button>
   </section>
 
   <section id="screen-lobby" class="screen">

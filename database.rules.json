@@ -21,6 +21,19 @@
         "$tab": { ".validate": "newData.isBoolean() && $tab.length <= 10" }
       }
     },
+    // Ladder du mode solo « Confusion en chaîne » : le meilleur score de chaque joueur (ladder/<uid>), qui ne peut qu'augmenter.
+    "ladder": {
+      ".read": "auth != null",
+      ".indexOn": ["score"],
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['name', 'score', 'at']) && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
+        "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20" },
+        "score": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100" },
+        "at": { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
     // Statistiques de réussite par question (clé = empreinte du contenu de la question) : lisibles par tous, incrémentées par le chef en fin de partie.
     "stats": {
       ".read": "auth != null",

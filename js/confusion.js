@@ -45,6 +45,20 @@ export function caseAViser(scene) {
   const k = COULEURS[scene.conf].k, [dx, dy] = tourner([scene.c[0] - scene.e[0], scene.c[1] - scene.e[1]], 4 - k);
   return [scene.e[0] + dx, scene.e[1] + dy];
 }
+// Scène tirée au hasard (mode solo), avec les mêmes règles que tools/confusion_horaire.py : l'Enutrof est dans le carré central de 9 × 9 cases,
+// le Comte est n'importe où ailleurs, la vie ne tombe pas pile sur 25 ou 75 %, et la case à cliquer est dans la grille.
+export function sceneAleatoire(n = 15, hasard = Math.random) {
+  const alea = (a, b) => a + Math.floor(hasard() * (b - a + 1)), m = Math.floor((n - 9) / 2);
+  for (;;) {
+    const pv = alea(1, 100);
+    if (pv === 25 || pv === 75) continue;
+    const conf = pv > 75 ? 'rouge' : pv > 25 ? 'bleue' : 'verte';
+    const e = [alea(m, m + 8), alea(m, m + 8)], c = [alea(0, n - 1), alea(0, n - 1)];
+    if (e[0] === c[0] && e[1] === c[1]) continue;
+    const sc = { n, e, c, conf, pv, aff: alea(0, AFFICHAGE[conf].length - 1) }, v = caseAViser(sc);
+    if (v[0] >= 0 && v[0] < n && v[1] >= 0 && v[1] < n) return sc;
+  }
+}
 // Réponse enregistrée : « x,y@ms » (ms = temps écoulé entre l'affichage de la scène et le dernier clic). L'ancien format « x,y » reste lisible.
 export const lireCase = t => { const m = /^\s*(-?\d+)\s*,\s*(-?\d+)\s*(?:@\s*(\d+))?\s*$/.exec(String(t ?? '')); return m ? [+m[1], +m[2]] : null; };
 export const lireTemps = t => { const m = /@\s*(\d+)\s*$/.exec(String(t ?? '')); return m ? +m[1] : null; };
