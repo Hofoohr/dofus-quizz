@@ -62,9 +62,9 @@ export function sceneAleatoire(n = 15, hasard = Math.random) {
   }
 }
 // Cartes particulières (mode test du solo) : cases libres (« sol ») et obstacles. Une scène de ces cartes porte « carte: "clepsydre" ».
-const prepare = c => ({ sol: new Set(c.sol.map(p => p.join(','))), obst: new Set(c.obstacles.map(p => p.join(','))), liste: c.sol, obstacles: c.obstacles });
+const prepare = c => ({ sol: new Set(c.sol.map(p => p.join(','))), obst: new Set(c.obstacles.map(p => p.join(','))), liste: c.sol, obstacles: c.obstacles, fond: c.fond });
 const CARTES = { clepsydre: prepare(CLEPSYDRE) };
-export const NOMS_CARTES = { grille: 'Grille classique (15 × 15)', clepsydre: 'Tour de la Clepsydre, salle du boss (test)' };
+export const NOMS_CARTES = { grille: 'Grille classique (15 × 15)', clepsydre: 'Donjon du Comte, Grande aiguille (test)' };
 // Scène tirée au hasard sur une carte particulière : l'Enutrof et le Comte sont sur des cases libres, et la case à cliquer aussi.
 export function sceneCarte(nom, hasard = Math.random) {
   const L = CARTES[nom], alea = (a, b) => a + Math.floor(hasard() * (b - a + 1)), un = () => L.liste[alea(0, L.liste.length - 1)];
@@ -100,13 +100,14 @@ export function classementRapide(reponses, scene, joueurs, pts) {
 }
 
 // --- Dessin ---
-const W = 52, H = 26, HAUT = 80;   // largeur / hauteur d'une case, marge en haut pour les personnages
+const W0 = 52, H0 = 26, HAUT0 = 80;   // largeur / hauteur d'une case, marge en haut pour les personnages (grille classique)
 const IMG = {};
 const charge = src => IMG[src] || (IMG[src] = Object.assign(new Image(), { src }));
 
 // Crée la scène dans un <canvas>. opts : { surClic(x, y) } ; renvoie { dessiner({ choix, marques, solution }) }.
 export function creerScene(canvas, scene, opts = {}) {
-  const n = scene.n, ctx = canvas.getContext('2d'), L = scene.carte && CARTES[scene.carte];
+  const n = scene.n, ctx = canvas.getContext('2d'), L = scene.carte && CARTES[scene.carte], F = L && L.fond;   // F : carte dessinée (image de fond)
+  const W = F ? F.W : W0, H = F ? F.H : H0, HAUT = HAUT0, ech = W / W0;   // ech : échelle des personnages
   // étendue de la grille à l'écran : u = x − y (gauche/droite), v = x + y (haut/bas) ; la grille carrée n × n donne n × W de large
   let minU = -(n - 1), maxU = n - 1, minV = 0, maxV = 2 * (n - 1);
   if (L) {
@@ -114,9 +115,9 @@ export function creerScene(canvas, scene, opts = {}) {
     minU = Math.min(...tout.map(p => p[0] - p[1])); maxU = Math.max(...tout.map(p => p[0] - p[1]));
     minV = Math.min(...tout.map(p => p[0] + p[1])); maxV = Math.max(...tout.map(p => p[0] + p[1]));
   }
-  canvas.width = (maxU - minU + 2) * W / 2; canvas.height = (maxV - minV + 2) * H / 2 + HAUT + 10;
+  canvas.width = F ? F.w : (maxU - minU + 2) * W / 2; canvas.height = F ? F.h : (maxV - minV + 2) * H / 2 + HAUT + 10;
   canvas.style.background = L ? '#0b0e18' : '';
-  const ox = (1 - minU) * W / 2, oy = HAUT - minV * H / 2;       // position à l'écran de la case (0, 0)
+  const ox = F ? F.x0 : (1 - minU) * W / 2, oy = F ? F.y0 - H / 2 : HAUT - minV * H / 2;       // position à l'écran de la case (0, 0)
   const libre = (x, y) => L ? L.sol.has(x + ',' + y) : x >= 0 && y >= 0 && x < n && y < n;   // case sur laquelle on peut cliquer
   const centre = (x, y) => [ox + (x - y) * W / 2, oy + (x + y) * H / 2 + H / 2];
   let survol = null, etat = { choix: null, marques: [], solution: null };
@@ -145,12 +146,13 @@ export function creerScene(canvas, scene, opts = {}) {
   function dessiner(e) {
     if (e) etat = { ...etat, ...e };
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const sols = L ? [...L.liste].sort((u, v) => (u[0] + u[1]) - (v[0] + v[1])) : [];
-    if (L) sols.forEach(([x, y]) => {
+    if (F) ctx.drawImage(charge(F.src), 0, 0, canvas.width, canvas.height);   // la carte est dessinée : cases et obstacles sont déjà dans l'image
+    const sols = L && !F ? [...L.liste].sort((u, v) => (u[0] + u[1]) - (v[0] + v[1])) : [];
+    if (L && !F) sols.forEach(([x, y]) => {
       losange(x, y); ctx.fillStyle = (x + y) % 2 ? '#8a7f58' : '#928860'; ctx.fill();
       ctx.strokeStyle = 'rgba(40,34,20,.45)'; ctx.lineWidth = 1; ctx.stroke();
     });
-    else for (let s = 0; s <= 2 * (n - 1); s++) for (let x = 0; x < n; x++) {   // du fond vers l'avant
+    else if (!L) for (let s = 0; s <= 2 * (n - 1); s++) for (let x = 0; x < n; x++) {   // du fond vers l'avant
       const y = s - x; if (y < 0 || y >= n) continue;
       losange(x, y); ctx.fillStyle = (x + y) % 2 ? '#c9b98f' : '#d8caa3'; ctx.fill();
       ctx.strokeStyle = 'rgba(70,55,30,.35)'; ctx.lineWidth = 1; ctx.stroke();
@@ -169,13 +171,13 @@ export function creerScene(canvas, scene, opts = {}) {
     if (etat.choix) { losange(...etat.choix); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill(); ctx.strokeStyle = '#222'; ctx.lineWidth = 3; ctx.stroke(); }
     // personnages et obstacles (cubes), dans l'ordre d'affichage (le plus en arrière d'abord)
     const persos = [{ p: scene.e, src: 'img/confusion/enutrof.png', nom: 'Enutrof', halo: col }, { p: scene.c, src: 'img/confusion/comte.png', nom: 'Comte Harebourg' },
-      ...(L ? L.obstacles.map(p => ({ p, cube: true })) : [])]
+      ...(L && !F ? L.obstacles.map(p => ({ p, cube: true })) : [])]
       .sort((u, v) => (u.p[0] + u.p[1]) - (v.p[0] + v.p[1]) || (u.cube ? -1 : 0) - (v.cube ? -1 : 0));
     persos.forEach(o => {
       if (o.cube) { cube(...o.p); return; }
       const [cx, cy] = centre(...o.p);
-      if (o.halo) { ctx.beginPath(); ctx.ellipse(cx, cy, W * .36, H * .38, 0, 0, 7); ctx.strokeStyle = o.halo; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = o.halo + '55'; ctx.fill(); }
-      sprite(o.src, o.p[0], o.p[1], o.nom === 'Enutrof' ? 64 : 72);
+      if (o.halo) { ctx.beginPath(); ctx.ellipse(cx, cy, W * .36, H * .38, 0, 0, 7); ctx.strokeStyle = o.halo; ctx.lineWidth = 4 * ech; ctx.stroke(); ctx.fillStyle = o.halo + '55'; ctx.fill(); }
+      sprite(o.src, o.p[0], o.p[1], (o.nom === 'Enutrof' ? 64 : 72) * ech);
     });
     (etat.marques || []).forEach(m => {   // correction : case cliquée par chaque joueur
       const [cx, cy] = centre(...m.p);
@@ -195,6 +197,7 @@ export function creerScene(canvas, scene, opts = {}) {
     canvas._ecouteurs.forEach(([t, f]) => canvas.addEventListener(t, f));
   }
   ['enutrof.png', 'comte.png'].forEach(f => { const im = charge('img/confusion/' + f); if (!im.complete) im.addEventListener('load', () => dessiner()); });
+  if (F) { const im = charge(F.src); if (!im.complete) im.addEventListener('load', () => dessiner()); }
   dessiner();
   return { dessiner };
 }
