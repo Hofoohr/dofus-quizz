@@ -4,6 +4,8 @@
 //   100 à 75 % de vie : 90° dans le sens horaire ; 75 à 25 % : 180° ; 25 à 0 % : 270° dans le sens horaire (= 90° anti-horaire).
 // Repère : x vers le bas-droite de l'écran, y vers le bas-gauche (comme les cases de Dofus vues en isométrique).
 
+import { CLEPSYDRE } from "./clepsydre.js";
+
 export const COULEURS = {
   rouge: { k: 1, hex: '#e53935', nom: 'rouge', angle: '90° dans le sens horaire' },
   bleue: { k: 2, hex: '#2f6bff', nom: 'bleue', angle: '180°' },
@@ -59,6 +61,23 @@ export function sceneAleatoire(n = 15, hasard = Math.random) {
     if (v[0] >= 0 && v[0] < n && v[1] >= 0 && v[1] < n) return sc;
   }
 }
+// Cartes particulières (mode test du solo) : cases libres (« sol ») et obstacles. Une scène de ces cartes porte « carte: "clepsydre" ».
+const prepare = c => ({ sol: new Set(c.sol.map(p => p.join(','))), obst: new Set(c.obstacles.map(p => p.join(','))), liste: c.sol, obstacles: c.obstacles });
+const CARTES = { clepsydre: prepare(CLEPSYDRE) };
+export const NOMS_CARTES = { grille: 'Grille classique (15 × 15)', clepsydre: 'Tour de la Clepsydre, salle du boss (test)' };
+// Scène tirée au hasard sur une carte particulière : l'Enutrof et le Comte sont sur des cases libres, et la case à cliquer aussi.
+export function sceneCarte(nom, hasard = Math.random) {
+  const L = CARTES[nom], alea = (a, b) => a + Math.floor(hasard() * (b - a + 1)), un = () => L.liste[alea(0, L.liste.length - 1)];
+  for (;;) {
+    const pv = alea(1, 100);
+    if (pv === 25 || pv === 75) continue;
+    const conf = pv > 75 ? 'rouge' : pv > 25 ? 'bleue' : 'verte', e = un(), c = un();
+    if (e[0] === c[0] && e[1] === c[1]) continue;
+    const n = 1 + Math.max(...L.liste.map(p => Math.max(p[0], p[1])));
+    const sc = { n, e: [...e], c: [...c], conf, pv, aff: alea(0, AFFICHAGE[conf].length - 1), carte: nom }, v = caseAViser(sc);
+    if (L.sol.has(v.join(','))) return sc;
+  }
+}
 // Réponse enregistrée : « x,y@ms » (ms = temps écoulé entre l'affichage de la scène et le dernier clic). L'ancien format « x,y » reste lisible.
 export const lireCase = t => { const m = /^\s*(-?\d+)\s*,\s*(-?\d+)\s*(?:@\s*(\d+))?\s*$/.exec(String(t ?? '')); return m ? [+m[1], +m[2]] : null; };
 export const lireTemps = t => { const m = /@\s*(\d+)\s*$/.exec(String(t ?? '')); return m ? +m[1] : null; };
@@ -87,9 +106,18 @@ const charge = src => IMG[src] || (IMG[src] = Object.assign(new Image(), { src }
 
 // Crée la scène dans un <canvas>. opts : { surClic(x, y) } ; renvoie { dessiner({ choix, marques, solution }) }.
 export function creerScene(canvas, scene, opts = {}) {
-  const n = scene.n, ctx = canvas.getContext('2d');
-  canvas.width = n * W; canvas.height = n * H + HAUT + 10;
-  const ox = n * W / 2, oy = HAUT;                                  // position à l'écran de la case (0, 0)
+  const n = scene.n, ctx = canvas.getContext('2d'), L = scene.carte && CARTES[scene.carte];
+  // étendue de la grille à l'écran : u = x − y (gauche/droite), v = x + y (haut/bas) ; la grille carrée n × n donne n × W de large
+  let minU = -(n - 1), maxU = n - 1, minV = 0, maxV = 2 * (n - 1);
+  if (L) {
+    const tout = [...L.liste, ...L.obstacles];
+    minU = Math.min(...tout.map(p => p[0] - p[1])); maxU = Math.max(...tout.map(p => p[0] - p[1]));
+    minV = Math.min(...tout.map(p => p[0] + p[1])); maxV = Math.max(...tout.map(p => p[0] + p[1]));
+  }
+  canvas.width = (maxU - minU + 2) * W / 2; canvas.height = (maxV - minV + 2) * H / 2 + HAUT + 10;
+  canvas.style.background = L ? '#0b0e18' : '';
+  const ox = (1 - minU) * W / 2, oy = HAUT - minV * H / 2;       // position à l'écran de la case (0, 0)
+  const libre = (x, y) => L ? L.sol.has(x + ',' + y) : x >= 0 && y >= 0 && x < n && y < n;   // case sur laquelle on peut cliquer
   const centre = (x, y) => [ox + (x - y) * W / 2, oy + (x + y) * H / 2 + H / 2];
   let survol = null, etat = { choix: null, marques: [], solution: null };
   const losange = (x, y, marge = 0) => {
@@ -99,11 +127,17 @@ export function creerScene(canvas, scene, opts = {}) {
   const caseSous = (px, py) => {   // inverse de « centre » : case sous le pointeur, ou null
     const a = (px - ox) / (W / 2), b = (py - oy - H / 2) / (H / 2);   // a = x - y ; b = x + y
     const x = Math.round((a + b) / 2), y = Math.round((b - a) / 2);
-    if (x < 0 || y < 0 || x >= n || y >= n) return null;
+    if (!libre(x, y)) return null;
     const [cx, cy] = centre(x, y);
     return Math.abs(px - cx) / (W / 2) + Math.abs(py - cy) / (H / 2) <= 1 ? [x, y] : null;
   };
   const pointeur = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) * canvas.width / r.width, (e.clientY - r.top) * canvas.height / r.height]; };
+  function cube(x, y) {   // obstacle : un cube d'une demi-case de haut, posé sur la case
+    const [cx, cy] = centre(x, y), ty = cy - H / 2, poly = (pts, col) => { ctx.beginPath(); pts.forEach(([a, b], i) => i ? ctx.lineTo(a, b) : ctx.moveTo(a, b)); ctx.closePath(); ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.stroke(); };
+    poly([[cx - W / 2, ty], [cx, ty + H / 2], [cx, cy + H / 2], [cx - W / 2, cy]], '#37342f');
+    poly([[cx + W / 2, ty], [cx, ty + H / 2], [cx, cy + H / 2], [cx + W / 2, cy]], '#4a473e');
+    poly([[cx, ty - H / 2], [cx + W / 2, ty], [cx, ty + H / 2], [cx - W / 2, ty]], '#58533a');
+  }
   function sprite(src, x, y, haut) {   // personnage découpé sans marge : les pieds sont posés au centre de la case
     const im = charge(src), [cx, cy] = centre(x, y);
     if (im.complete && im.naturalWidth) { const l = haut * im.naturalWidth / im.naturalHeight; ctx.drawImage(im, cx - l / 2, cy + H / 4 - haut, l, haut); }
@@ -111,7 +145,12 @@ export function creerScene(canvas, scene, opts = {}) {
   function dessiner(e) {
     if (e) etat = { ...etat, ...e };
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let s = 0; s <= 2 * (n - 1); s++) for (let x = 0; x < n; x++) {   // du fond vers l'avant
+    const sols = L ? [...L.liste].sort((u, v) => (u[0] + u[1]) - (v[0] + v[1])) : [];
+    if (L) sols.forEach(([x, y]) => {
+      losange(x, y); ctx.fillStyle = (x + y) % 2 ? '#8a7f58' : '#928860'; ctx.fill();
+      ctx.strokeStyle = 'rgba(40,34,20,.45)'; ctx.lineWidth = 1; ctx.stroke();
+    });
+    else for (let s = 0; s <= 2 * (n - 1); s++) for (let x = 0; x < n; x++) {   // du fond vers l'avant
       const y = s - x; if (y < 0 || y >= n) continue;
       losange(x, y); ctx.fillStyle = (x + y) % 2 ? '#c9b98f' : '#d8caa3'; ctx.fill();
       ctx.strokeStyle = 'rgba(70,55,30,.35)'; ctx.lineWidth = 1; ctx.stroke();
@@ -128,10 +167,12 @@ export function creerScene(canvas, scene, opts = {}) {
       losange(...survol); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fill();
     }
     if (etat.choix) { losange(...etat.choix); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill(); ctx.strokeStyle = '#222'; ctx.lineWidth = 3; ctx.stroke(); }
-    // personnages, dans l'ordre d'affichage (le plus en arrière d'abord)
-    const persos = [{ p: scene.e, src: 'img/confusion/enutrof.png', nom: 'Enutrof', halo: col }, { p: scene.c, src: 'img/confusion/comte.png', nom: 'Comte Harebourg' }]
-      .sort((u, v) => (u.p[0] + u.p[1]) - (v.p[0] + v.p[1]));
+    // personnages et obstacles (cubes), dans l'ordre d'affichage (le plus en arrière d'abord)
+    const persos = [{ p: scene.e, src: 'img/confusion/enutrof.png', nom: 'Enutrof', halo: col }, { p: scene.c, src: 'img/confusion/comte.png', nom: 'Comte Harebourg' },
+      ...(L ? L.obstacles.map(p => ({ p, cube: true })) : [])]
+      .sort((u, v) => (u.p[0] + u.p[1]) - (v.p[0] + v.p[1]) || (u.cube ? -1 : 0) - (v.cube ? -1 : 0));
     persos.forEach(o => {
+      if (o.cube) { cube(...o.p); return; }
       const [cx, cy] = centre(...o.p);
       if (o.halo) { ctx.beginPath(); ctx.ellipse(cx, cy, W * .36, H * .38, 0, 0, 7); ctx.strokeStyle = o.halo; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = o.halo + '55'; ctx.fill(); }
       sprite(o.src, o.p[0], o.p[1], o.nom === 'Enutrof' ? 64 : 72);
