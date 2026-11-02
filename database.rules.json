@@ -21,13 +21,24 @@
         "$tab": { ".validate": "newData.isBoolean() && $tab.length <= 10" }
       }
     },
+    // Début d'une série du mode solo : l'heure est celle du serveur (le joueur ne peut pas la choisir). Sert à vérifier la durée d'une série (voir « ladder »).
+    "runs": {
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['start'])",
+        "start": { ".validate": "newData.isNumber() && newData.val() === now" },
+        "$other": { ".validate": false }
+      }
+    },
     // Ladder du mode solo « Confusion en chaîne » : le meilleur score de chaque joueur (ladder/<uid>), qui ne peut qu'augmenter.
+    // Un score n'est accepté que si : l'heure est celle du serveur ; une série a été commencée (runs) APRÈS le score précédent ;
+    // et le temps écoulé depuis le début de cette série permet ce score (au moins 0,4 s par réussite).
     "ladder": {
       ".read": "auth != null",
       ".indexOn": ["score"],
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".validate": "newData.hasChildren(['name', 'score', 'at']) && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
+        ".validate": "newData.hasChildren(['name', 'score', 'at']) && (!data.exists() || newData.child('score').val() >= data.child('score').val()) && newData.child('at').val() === now && root.child('runs/' + $uid + '/start').exists() && root.child('runs/' + $uid + '/start').val() > (data.exists() ? data.child('at').val() : 0) && newData.child('score').val() <= (now - root.child('runs/' + $uid + '/start').val()) / 400",
         "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20" },
         "score": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100" },
         "at": { ".validate": "newData.isNumber()" },

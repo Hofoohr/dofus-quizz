@@ -60,6 +60,8 @@ function demarrer() {
   arreter();
   $('so-intro').hidden = true; $('so-over').hidden = true; $('so-play').hidden = false;
   run = { score: 0, duree: DUREE_DEPART, scene: null, debut: 0, actif: false, nom, id: Math.random() };
+  // Début de série daté par le serveur : les règles de la base s'en servent pour refuser un score impossible en si peu de temps.
+  run.depart = set(ref(db, `runs/${ctx.uid()}`), { start: serverTimestamp() }).catch(e => console.warn(e));
   $('so-score').textContent = 'Série : 0'; $('so-time').textContent = '';
   $('so-fill').style.width = '100%'; $('so-fill').classList.remove('urgent');
   $('so-conf').innerHTML = ''; $('so-scenewrap').hidden = true;
@@ -112,7 +114,7 @@ function surClic(x, y) {
 async function perdre(titre, choix) {
   clearInterval(minuteur); minuteur = null;
   run.actif = false;
-  const { score, nom } = run;
+  const { score, nom, depart } = run;
   jeu.dessiner({ choix, solution: caseAViser(run.scene) });
   $('so-fill').style.width = '0%';
   $('so-title').textContent = titre;
@@ -121,6 +123,7 @@ async function perdre(titre, choix) {
   $('so-over').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   if (!score) return;
   try {
+    await depart;   // la série doit être enregistrée avant le score
     const mine = await get(ref(db, `ladder/${ctx.uid()}`));
     const best = mine.exists() ? mine.val().score : 0;
     if (score > best) {
