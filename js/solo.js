@@ -2,7 +2,7 @@
 // On commence avec 5 s par scène ; chaque réussite retire 5 % du temps restant. Une erreur ou le temps écoulé met fin à la série ; le score est le nombre de réussites.
 // Le ladder (meilleur score de chaque joueur) est dans la base : ladder/<uid> = { name, score, at }.
 import { db, ref, get, set, onValue, query, limitToLast, orderByChild, serverTimestamp } from "./firebase.js";
-import { creerScene, infosScene, caseAViser, sceneAleatoire, sceneCarte } from "./confusion.js";
+import { creerScene, infosScene, caseAViser, sceneAleatoire } from "./confusion.js";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -59,9 +59,9 @@ function demarrer() {
   const nom = ctx.name(); if (!nom) return;   // pseudo obligatoire (il apparaît dans le ladder)
   arreter();
   $('so-intro').hidden = true; $('so-over').hidden = true; $('so-play').hidden = false;
-  run = { carte: $('so-carte').value, score: 0, duree: DUREE_DEPART, scene: null, debut: 0, actif: false, nom, id: Math.random() };
+  run = { score: 0, duree: DUREE_DEPART, scene: null, debut: 0, actif: false, nom, id: Math.random() };
   // Début de série daté par le serveur : les règles de la base s'en servent pour refuser un score impossible en si peu de temps.
-  if (run.carte === 'grille') run.depart = set(ref(db, `runs/${ctx.uid()}`), { start: serverTimestamp() }).catch(e => console.warn(e));
+  run.depart = set(ref(db, `runs/${ctx.uid()}`), { start: serverTimestamp() }).catch(e => console.warn(e));
   $('so-score').textContent = 'Série : 0'; $('so-time').textContent = '';
   $('so-fill').style.width = '100%'; $('so-fill').classList.remove('urgent');
   $('so-conf').innerHTML = ''; $('so-scenewrap').hidden = true;
@@ -77,7 +77,7 @@ function demarrer() {
 }
 
 function suivante() {
-  const sc = run.carte === 'grille' ? sceneAleatoire() : sceneCarte(run.carte);
+  const sc = sceneAleatoire();
   run.scene = sc;
   $('so-scenewrap').hidden = false;
   $('so-conf').innerHTML = infosScene(sc);
@@ -114,7 +114,7 @@ function surClic(x, y) {
 async function perdre(titre, choix) {
   clearInterval(minuteur); minuteur = null;
   run.actif = false;
-  const { score, nom, depart, carte } = run;
+  const { score, nom, depart } = run;
   jeu.dessiner({ choix, solution: caseAViser(run.scene) });
   $('so-fill').style.width = '0%';
   $('so-title').textContent = titre;
@@ -122,9 +122,8 @@ async function perdre(titre, choix) {
   $('so-over').hidden = false;
   $('so-over').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   if (!score) return;
-  if (carte !== 'grille') { $('so-msg').textContent += ' (Carte en version test : score non enregistré dans le ladder.)'; return; }
   try {
-    await depart;   // la série doit être enregistrée avant le score (grille classique seulement)
+    await depart;   // la série doit être enregistrée avant le score 
     const mine = await get(ref(db, `ladder/${ctx.uid()}`));
     const best = mine.exists() ? mine.val().score : 0;
     if (score > best) {

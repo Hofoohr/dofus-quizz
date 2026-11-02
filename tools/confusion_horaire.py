@@ -2,9 +2,9 @@
 """Génère la catégorie « Confusion horaire » (mini-jeu) : js/questions/confusion.js + les deux personnages dans img/confusion/.
 
 Usage : python3 tools/confusion_horaire.py
-Chaque question est une scène sur une grille isométrique de 15 × 15 cases : une Enutrof, le Comte Harebourg (sans limite de distance) et un % de vie.
+Chaque question est une scène sur la carte « Donjon du Comte - Grande aiguille » (js/clepsydre.js : cases libres et obstacles relevés sur l'image) : une Enutrof, le Comte Harebourg (sans limite de distance) et un % de vie.
 Le % de vie donne la confusion, qui tourne la case visée autour du lanceur (100 à 75 % : 90° horaire, 75 à 25 % : 180°, 25 à 0 % : 270° horaire : voir js/confusion.js).
-L'Enutrof est dans le carré central de 9 × 9 cases de la grille ; la case du Comte et la vie sont tirées au hasard ; la confusion doit rester possible (la case à cliquer est dans la grille).
+L'Enutrof, le Comte et la case à cliquer sont toujours des cases libres de la carte (pas d'obstacle, pas de vide) ; la case du Comte et la vie sont tirées au hasard.
 Le joueur doit cliquer la case qui, une fois tournée, tombe sur le Comte. La bonne case est recalculée par le site (js/confusion.js).
 Images : le Comte Harebourg vient de DofusDB (api.dofusdb.fr/img/monsters/993.png). L'Enutrof est rendu par le moteur d'images d'Ankama
 (static.ankama.com/dofus/renderer) à partir de son « look » DofusDB (breeds/3 : peau 30, tête 2044, couleurs de la classe).
@@ -12,6 +12,7 @@ Les illustrations appartiennent à Ankama.
 """
 import json
 import random
+import re
 import io
 import urllib.request
 from pathlib import Path
@@ -19,9 +20,10 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-N = 15                        # côté de la grille
+CLEPSYDRE = json.loads(re.search(r"sol: (\[\[.*?\]\]),\n", (ROOT / "js" / "clepsydre.js").read_text(encoding="utf-8"), re.S).group(1))
+SOL = {tuple(c) for c in CLEPSYDRE}
+N = 1 + max(max(c) for c in CLEPSYDRE)   # « n » publié avec la scène (les règles de la base acceptent 5 à 25)
 NB_SCENES = 200
-CENTRE_MIN, CENTRE_MAX = (N - 9) // 2, (N - 9) // 2 + 8   # carré central de 9 × 9 : cases 3 à 11
 PTS, TEMPS = 5, 11   # question de rapidité : 3 s d'annonce + 8 s pour répondre ; le plus rapide gagne le plus de points (5 pour le 1er)
 COULEURS_ENUTROF = [13732958, 15851694, 3093806, 14325820, 7814953, 9995877]   # maleColors de la classe 3 (DofusDB)
 LOOK_ENUTROF = "{1|30,2044|%s|120}" % ",".join(f"{i + 1}={v}" for i, v in enumerate(COULEURS_ENUTROF))
@@ -44,19 +46,19 @@ def conf_pour(pv):   # 100 à 75 % de vie : 90° ; 75 à 25 % : 180° ; 25 à 0 
 
 
 def scene(rng):
+    libres = sorted(SOL)
     while True:
         pv = rng.randint(1, 100)
         if pv in (25, 75):          # les limites des tranches sont ambiguës : on les évite
             continue
         conf = conf_pour(pv)
-        e = (rng.randint(CENTRE_MIN, CENTRE_MAX), rng.randint(CENTRE_MIN, CENTRE_MAX))   # l'Enutrof est dans le carré central de 9 × 9 cases
-        c = (rng.randrange(N), rng.randrange(N))
+        e, c = rng.choice(libres), rng.choice(libres)
         t = (c[0] - e[0], c[1] - e[1])
         if t == (0, 0):
             continue
         dx, dy = tourner(t, 4 - ROT[conf])
         v = (e[0] + dx, e[1] + dy)
-        if 0 <= v[0] < N and 0 <= v[1] < N:     # la confusion doit être possible : la case à cliquer est dans la grille
+        if v in SOL:                # la case à cliquer est une case libre de la carte
             return {"n": N, "e": list(e), "c": list(c), "conf": conf, "pv": pv, "aff": rng.randrange(NB_ECRITURES[conf])}
 
 
