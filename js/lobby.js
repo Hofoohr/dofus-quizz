@@ -92,7 +92,7 @@ let seenSelf = false;
 function kicked() {
   unsubs.forEach(u => u()); unsubs = []; Chat.stop();
   try { onDisconnect(playerRef).cancel(); } catch (e) {}
-  store('room', null);
+  store('room', null); store('roomAt', null);
   code = null; meta = null; players = {}; playerRef = null; started = false; seenSelf = false;
   showScreen('home');
   showError("Le chef t'a exclu du salon.");
@@ -100,7 +100,7 @@ function kicked() {
 
 function enterRoom() {
   started = false;
-  store('room', code);
+  store('room', code); store('roomAt', String(Date.now()));
   $('room-code').textContent = code;
   showScreen('lobby');
   unsubs.push(onValue(ref(db, `rooms/${code}/meta`), s => { meta = s.val(); render(); }));
@@ -115,15 +115,19 @@ function enterRoom() {
 }
 
 // Après un rechargement de page, on revient dans la partie en cours.
+// Le retour automatique ne vaut que pour 1 heure : l'heure de dernière présence dans le salon est rafraîchie toutes les 30 s tant qu'on y est.
+const REPRISE_MAX_MS = 3600 * 1000;
+setInterval(() => { if (code) store('roomAt', String(Date.now())); }, 30000);
 async function tryResume() {
   const c = load('room');
   if (!c) return;
+  if (Date.now() - (+load('roomAt') || 0) > REPRISE_MAX_MS) { store('room', null); store('roomAt', null); return; }   // plus d'une heure : on oublie ce salon
   try {
     const [m, me] = await Promise.all([get(ref(db, `rooms/${c}/meta`)), get(ref(db, `rooms/${c}/players/${uid}`))]);
     if (m.exists() && me.exists() && m.val().phase !== 'lobby') {
       code = c; playerRef = ref(db, `rooms/${c}/players/${uid}`);
       enterRoom();
-    } else store('room', null);
+    } else { store('room', null); store('roomAt', null); }
   } catch (e) { console.error(e); }
 }
 
@@ -204,7 +208,7 @@ async function leaveRoom() {
   if (meta && meta.hostUid === uid) Salons.unpublish(code);
   unsubs.forEach(u => u()); unsubs = []; Chat.stop();
   try { onDisconnect(playerRef).cancel(); await remove(playerRef); } catch (e) {}
-  store('room', null);
+  store('room', null); store('roomAt', null);
   code = null; meta = null; players = {}; playerRef = null; started = false;
   showScreen('home');
 }
@@ -218,7 +222,7 @@ async function exitRoom(endGame) {
   if (endGame) {   // le chef qui part met fin à la partie : les résultats s'affichent chez les autres
     try { await update(ref(db, `rooms/${c}/meta`), { phase: 'results' }); } catch (e) { console.error(e); }
   }
-  store('room', null);
+  store('room', null); store('roomAt', null);
   code = null; meta = null; players = {}; playerRef = null; started = false;
   showScreen('home');
 }
