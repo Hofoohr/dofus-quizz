@@ -1,4 +1,4 @@
-# Quizz Culture & GeoGuessr Dofus
+# dofus-quizz & GeoGuessr Dofus
 
 Jeu multijoueur en ligne autour de Dofus, à jouer entre amis : quizz de culture (quêtes, sorts, panoplies, donjons, métiers, cartes…), GeoGuessr Dofus, « Confusion horaire » du Comte Harebourg et « Monstre pixelisé ».
 

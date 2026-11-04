@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quizz Culture &amp; GeoGuessr Dofus</title>
+<title>dofus-quizz &amp; GeoGuessr Dofus</title>
 <meta name="description" content="Quizz Dofus multijoueur : quêtes, sorts, panoplies, donjons, GeoGuessr et plus. Gratuit, sans compte.">
 <meta name="theme-color" content="#14172b">
 <link rel="icon" type="image/png" href="img/logo.png">
-<meta property="og:title" content="Quizz Culture Dofus">
+<meta property="og:title" content="dofus-quizz">
 <meta property="og:description" content="Quizz Dofus multijoueur : quêtes, sorts, panoplies, donjons, GeoGuessr et plus. Gratuit, sans compte.">
 <meta property="og:image" content="https://hofoohr.github.io/dofus-quizz/img/logo.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -19,7 +19,7 @@
   <section id="screen-home" class="screen active">
     <header class="hero">
       <a class="discord" href="https://discord.gg/sUwsVN7wQ" target="_blank" rel="noopener noreferrer" title="Rejoindre le Discord"><img src="img/discord.png" alt="Rejoindre le Discord"></a>
-      <h1>Quizz Culture</h1>
+      <h1>dofus-quizz</h1>
       <p class="lead">Quizz de dofus ou GeoGuessr Dofus</p>
       <p id="online" class="online"></p>
     </header>
@@ -110,7 +110,7 @@
         <label class="field">Temps pour répondre après le 1er guess
           <select id="geo-grace"><option value="5">5 s</option><option value="10">10 s</option><option value="15" selected>15 s</option><option value="20">20 s</option><option value="25">25 s</option><option value="30">30 s</option></select>
         </label>
-        <label class="chk"><input type="checkbox" id="geo-nomove"> 🚫 Mode « no move » (pas de déplacement)</label>
+        <label class="chk"><input type="checkbox" id="geo-nomove" checked> 🚫 Mode « no move » (pas de déplacement)</label>
       </div>
       <button id="start" class="btn">Lancer la partie</button>
     </div>
@@ -207,6 +207,7 @@
         <ul id="g-rows"></ul>
       </div>
 
+      <div class="duo">
       <div id="g-explore">
         <div id="g-shot" class="shot">
           <img id="g-img" alt="Carte de Dofus" draggable="false">
@@ -231,6 +232,7 @@
           <label>y <input id="g-y" type="number" inputmode="numeric" placeholder="y"></label>
           <button id="g-submit" class="btn" disabled>Valider mon guess</button>
         </div>
+      </div>
       </div>
 
     </div>

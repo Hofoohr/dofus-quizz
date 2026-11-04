@@ -192,7 +192,7 @@ function showImage() {
 $('g-img').onerror = () => { $('g-img').hidden = true; $('g-noimg').hidden = false; };
 
 function move(dx, dy) {
-  if (!running || cfg.noMove || st.mode !== 'guess' || nav.tab !== 'explore') return;
+  if (!running || cfg.noMove || st.mode !== 'guess') return;
   if (!at_(nav.x + dx, nav.y + dy)) return;
   nav.x += dx; nav.y += dy;
   showImage();
@@ -241,13 +241,11 @@ $('g-submit').onclick = submit;
 // --- Affichage ---
 function layout() {
   const guessing = st.mode === 'guess', reveal = st.mode === 'reveal' || st.mode === 'over';
-  $('g-tabs').hidden = !guessing;
-  $('g-tab-explore').classList.toggle('on', nav.tab === 'explore');
-  $('g-tab-guess').classList.toggle('on', nav.tab === 'guess');
-  $('g-explore').hidden = !(reveal || (guessing && nav.tab === 'explore'));
+  $('g-tabs').hidden = true;   // l'image et la carte du monde sont affichées en même temps (plus d'onglets)
+  $('g-explore').hidden = false;
   $('g-shot').classList.toggle('reveal', reveal || cfg.noMove);
   $('g-navpad').hidden = reveal || cfg.noMove;
-  const showMap = reveal || (guessing && nav.tab === 'guess');
+  const showMap = true;
   $('g-guessbox').hidden = !showMap;
   if (showMap) ensureMap();
   $('g-form').hidden = !guessing;
