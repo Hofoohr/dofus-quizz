@@ -14,8 +14,10 @@ function distance(a, b) {
   }
   return d[a.length][b.length];
 }
-// Fautes tolérées : une seule lettre de différence (ajoutée, retirée, changée, ou deux lettres voisines inversées), sauf pour les noms de 3 lettres ou moins.
+// Fautes tolérées (hors monstre pixelisé : voir tolerancePixel) : une seule lettre de différence (ajoutée, retirée, changée, ou deux lettres voisines inversées), sauf pour les noms de 3 lettres ou moins.
 export const tolerance = longueur => (longueur <= 3 ? 0 : 1);
+// Monstre pixelisé : jusqu'à deux lettres de différence pour les noms de 6 lettres ou plus, une seule pour 4 et 5 lettres, aucune pour 3 lettres ou moins.
+export const tolerancePixel = longueur => (longueur <= 3 ? 0 : longueur <= 5 ? 1 : 2);
 
 // La réponse du joueur contient-elle la bonne réponse (sans majuscules, accents ni ponctuation) ? « poukachi » est dans « la légende Poukachi ».
 export const contient = (saisie, attendu) => { const t = normaliser(attendu); return t !== '' && normaliser(saisie).includes(t); };
@@ -45,19 +47,19 @@ export const memeDofus = (saisie, attendu) => {
   return n !== '' && t !== '' && (n === t || distance(n, t) <= tolerance(t.length));
 };
 
-// Réponse acceptée : le nom exact, ou assez proche (voir tolerance). « autres » : ensemble des noms normalisés de tous les monstres ; une réponse qui est
+// Réponse acceptée : le nom exact, ou assez proche (voir tolerancePixel). « autres » : ensemble des noms normalisés de tous les monstres ; une réponse qui est
 // exactement le nom d'un AUTRE monstre est refusée (« Bwork » ne vaut pas « Bworkette »).
 export const estBonNom = (nom, saisie, autres = new Set()) => {
   const n = normaliser(saisie), t = normaliser(nom);
   if (n === '') return false;
   if (n === t) return true;
   if (autres.has(n)) return false;
-  return distance(n, t) <= tolerance(t.length);
+  return distance(n, t) <= tolerancePixel(t.length);
 };
 // Réponse refusée mais très proche (une faute de plus que la tolérance) : on peut encourager le joueur.
 export const presque = (nom, saisie, autres = new Set()) => {
   const n = normaliser(saisie), t = normaliser(nom);
-  return n !== '' && !autres.has(n) && distance(n, t) <= tolerance(t.length) + 1 && t.length >= 4;
+  return n !== '' && !autres.has(n) && distance(n, t) <= tolerancePixel(t.length) + 1 && t.length >= 4;
 };
 
 // Réponse enregistrée : « ok@ms:essais|texte » quand le monstre est trouvé (ms = temps écoulé depuis le début de la question, texte = ce que le joueur a écrit),

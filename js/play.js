@@ -47,7 +47,7 @@ function essayer() {
   essais++;
   if (estBonNom(bankOf(list[cur]).nom, saisie, NOMS_MONSTRES)) {
     trouveSaisie = saisie.trim().slice(0, 60);
-    trouveMs = Math.max(0, Math.round(serverNow() - sched[cur].start));
+    trouveMs = Math.max(0, Math.round(Math.min(serverNow(), sched[cur].end) - sched[cur].start));   // plafonné à la fin de la question (mot tapé et validé automatiquement au bout du temps)
     $('p-answer').disabled = true; $('p-try').disabled = true;
     majPixel();
     saveNow(cur);
@@ -109,6 +109,7 @@ function saveNow(i) {
 // Fin du temps : on bloque la saisie et on envoie ce qui est écrit.
 function lockQuestion() {
   if (cur === null || lockedFor === cur) return;
+  if (isPixel(list[cur]) && trouveMs === null && $('p-answer').value.trim()) essayer();   // monstre pixelisé : le mot tapé mais pas validé avec Entrée est vérifié à la fin du temps
   lockedFor = cur;
   $('p-answer').disabled = true; $('p-try').disabled = true;
   inputs().forEach(el => { el.disabled = true; });
@@ -133,7 +134,7 @@ function openQuestion(i) {
   $('p-mapbox').hidden = !rank;
   const clic = isClic(q), pixel = isPixel(q);
   $('p-pixelbox').hidden = !pixel; $('p-try').hidden = !pixel; $('p-try').disabled = false;
-  trouveMs = null; essais = 0; trouveSaisie = ''; $('p-pixelmsg').className = 'hint'; $('p-pixelmsg').textContent = 'Tape le nom du monstre (majuscules, accents et une lettre de différence est acceptée) : autant d\'essais que tu veux !';
+  trouveMs = null; essais = 0; trouveSaisie = ''; $('p-pixelmsg').className = 'hint'; $('p-pixelmsg').textContent = 'Tape le nom du monstre (majuscules, accents et deux lettres de différence sont acceptés) : autant d\'essais que tu veux !';
   if (pixel) { pixelImg = Object.assign(new Image(), { src: bankOf(q).sprite }); pixelImg.onload = () => majPixel(); majPixel(); }
   $('p-scenebox').hidden = true;   // affichée par tick() une fois l'annonce terminée
   $('p-rush').hidden = !clic;
