@@ -24,7 +24,7 @@ import cartes_dofus as c
 ROOT = c.ROOT
 DOSSIER = ROOT / "img" / "geo"
 REJETS = ROOT / "tools" / "cartes" / "geo-rejets.json"   # cartes écartées par le filtre qualité (pour ne pas les retélécharger)
-NOMBRE = 250           # cartes à garder
+NOMBRE = 1500          # cartes à garder
 GRAINE = 2026          # graine du tirage au hasard
 BUDGET = float(os.environ.get("BUDGET", 540))   # secondes par lancement
 PTS, TEMPS = 5, 45     # 45 secondes ; 5 points pour le 1er du classement (voir js/carte.js)
