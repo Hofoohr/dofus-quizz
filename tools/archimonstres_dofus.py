@@ -5,7 +5,7 @@ Usage : python3 tools/archimonstres_dofus.py
 Deux types de questions pour chaque archimonstre (« groupe » : à chaque tirage de la catégorie, les deux types ont autant de chances) :
   - « image » : le sprite de l'archimonstre avec la flamme bleue des archimonstres au-dessus (sans toucher le sprite) ; on demande son nom ;
   - « nom » : le nom de l'archimonstre ; on demande le nom du monstre correspondant (« correspondingNonMiniBoss » dans DofusDB).
-Les noms, les sprites et la correspondance viennent de DofusDB (api.dofusdb.fr) : l'archimonstre = race « Archimonstres », isMiniBoss, avec un nom et une image ;
+Les noms, les sprites et la correspondance viennent de DofusDB (api.dofusdb.fr) : l'archimonstre = race « Archimonstres », isMiniBoss, avec un nom, une image et un succès d'archimonstre associé ;
 le monstre correspondant = « correspondingNonMiniBoss » de DofusDB (le monstre dont l'archimonstre est la version « archi »). Sans monstre correspondant, il n'y a pas de question « nom » ;
 si deux archimonstres ont exactement le même dessin, il n'y a pas de question « image » (réponse ambiguë).
 La flamme (tools/archimonstres/flamme.png) est découpée dans une capture du jeu fournie par le propriétaire du site.
@@ -48,7 +48,7 @@ def get(url):
 def monstres():
     out, skip = [], 0
     while True:
-        q = urllib.parse.urlencode({"$limit": 50, "$skip": skip, "$select[]": ["id", "name.fr", "gfxId", "race", "isMiniBoss", "img", "correspondingNonMiniBoss"]}, doseq=True, safe="[]$")
+        q = urllib.parse.urlencode({"$limit": 50, "$skip": skip, "$select[]": ["id", "name.fr", "gfxId", "race", "isMiniBoss", "img", "correspondingNonMiniBoss", "achievements"]}, doseq=True, safe="[]$")
         r = json.loads(get(f"{API}/monsters?{q}"))
         out += r["data"]
         skip += len(r["data"])
@@ -82,7 +82,7 @@ def image_flamme(sprite_png):
 def main():
     IMG_DIR.mkdir(parents=True, exist_ok=True)
     tous = monstres()
-    archis = [m for m in tous if m.get("race") == RACE_ARCHI and m.get("isMiniBoss") and nom(m) and "?" not in nom(m) and m.get("img") and m.get("gfxId")]
+    archis = [m for m in tous if m.get("race") == RACE_ARCHI and m.get("isMiniBoss") and nom(m) and "?" not in nom(m) and m.get("img") and m.get("gfxId") and m.get("achievements")]   # « achievements » : succès d'archimonstre (catégorie « Archimonstres » de DofusDB) ; les 20 Krokille n'en ont pas et sont écartés
     gfx_archis = {}
     for m in archis:
         gfx_archis.setdefault(m["gfxId"], []).append(m)
