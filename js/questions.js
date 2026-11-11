@@ -28,9 +28,10 @@ import confusion from "./questions/confusion.js";
 import monstresPixel from "./questions/monstres-pixel.js";
 import croquettes from "./questions/croquettes.js";
 import pointsSucces from "./questions/points-succes.js";
+import archimonstres from "./questions/archimonstres.js";
 import { caseAViser } from "./confusion.js";
 
-const CATEGORIES = [quetes, quetesDofus, sorts, panoplies, dofus, legendaires, succesDonjons, donjons, metiers, cartes, geoguessr, confusion, monstresPixel, croquettes, pointsSucces];
+const CATEGORIES = [quetes, quetesDofus, sorts, panoplies, dofus, legendaires, succesDonjons, donjons, metiers, cartes, geoguessr, confusion, monstresPixel, croquettes, pointsSucces, archimonstres];
 
 // Clé stable d'une question pour les statistiques (ne dépend pas de la place de la question dans la banque) : empreinte de son contenu.
 const empreinte = s => {
@@ -46,7 +47,7 @@ export const QUESTIONS = CATEGORIES.flatMap((c, ci) =>
     if (Array.isArray(it)) { const [q, a, pts, temps, groupe, verif] = it; o = { id, type: "simple", cat: c.cat, q, a, pts, temps, groupe, verif }; }
     else if (it.sprite) o = { id, type: "pixel", cat: c.cat, q: it.q, a: it.nom, nom: it.nom, sprite: it.sprite, pts: it.pts, temps: it.temps };
     else if (it.scene) o = { id, type: "clic", cat: c.cat, q: it.q, a: caseAViser(it.scene).join(","), pts: it.pts, temps: it.temps, scene: it.scene };
-    else o = { id, type: "multi", cat: c.cat, q: it.q, champs: it.champs.map(f => f[0]), a: it.champs.map(f => f[1]), pts: it.pts, temps: it.temps, img: it.img, coord: it.coord, classement: it.classement, verif: it.verif, unique: it.unique, groupe: it.groupe, rel: it.rel };
+    else o = { id, type: "multi", cat: c.cat, q: it.q, champs: it.champs.map(f => f[0]), a: it.champs.map(f => f[1]), pts: it.pts, temps: it.temps, img: it.img, coord: it.coord, classement: it.classement, verif: it.verif, unique: it.unique, groupe: it.groupe, rel: it.rel, petite: it.petite };
     if (c.niveauChamp != null) o.niveauChamp = c.niveauChamp;   // champ numéroté « niveau » : le plus proche gagne (classement automatique)
     if (c.unite) o.unite = c.unite;   // unité du champ « niveau » dans la correction (« point », par défaut « niveau »)
     if (c.seuil != null) o.seuil = c.seuil;   // statistiques : écart maximal pour compter une réussite

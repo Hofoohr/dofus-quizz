@@ -56,6 +56,22 @@ export const estBonNom = (nom, saisie, autres = new Set()) => {
   if (autres.has(n)) return false;
   return distance(n, t) <= tolerancePixel(t.length);
 };
+// Correction « nom2 » (catégorie Archimonstre) : la réponse est le nom attendu à deux lettres près (voir tolerancePixel : 1 lettre pour 4-5 lettres, 0 pour 3 ou moins).
+// Pour un archimonstre, le nom court avant l'épithète est accepté aussi (« Piradain » pour « Piradain le Pingre »). « attendu » peut lister plusieurs noms séparés par « / » : l'un d'eux suffit.
+export const noms2 = attendu => String(attendu ?? '').split(' / ').flatMap(n => {
+  const court = n.split(/\s+(?:le|la|les|l'|du|des|de|d')\s*/i)[0];
+  return court && normaliser(court).length >= 3 ? [n, court] : [n];
+});
+// « autres » : noms normalisés de toutes les autres réponses possibles ; une réponse qui est exactement l'un d'eux (sans être l'un des noms attendus) est refusée
+// (« Forboyar » ne vaut pas « Corboyard »).
+export const memeNom = (saisie, attendu, autres = new Set()) => {
+  const n = normaliser(saisie), bons = noms2(attendu).map(normaliser);
+  if (n === '') return false;
+  if (bons.includes(n)) return true;
+  if (autres.has(n)) return false;
+  return bons.some(t => t !== '' && distance(n, t) <= tolerancePixel(t.length));
+};
+
 // Réponse refusée mais très proche (une faute de plus que la tolérance) : on peut encourager le joueur.
 export const presque = (nom, saisie, autres = new Set()) => {
   const n = normaliser(saisie), t = normaliser(nom);

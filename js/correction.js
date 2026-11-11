@@ -2,7 +2,7 @@ import { db, ref, get, set, update, onValue, runTransaction } from "./firebase.j
 import { QUESTIONS } from "./questions.js";
 import { texteDistance, classement, lireCoord } from "./carte.js";
 import { creerMonde } from "./monde.js";
-import { classerParTemps, contient, contientProche, memeDofus, aUneFaute } from "./devine.js";
+import { classerParTemps, contient, contientProche, memeDofus, memeNom, noms2, normaliser, aUneFaute } from "./devine.js";
 import { nombre, ecart, memesTypes } from "./panoplie.js";
 import { enregistrerPartie } from "./histo.js";
 import { corrigerSort } from "./autosort.js";
@@ -81,7 +81,7 @@ function renderCorrection() {
   $('c-cat').textContent = q.cat;
   $('c-text').textContent = q.q;
   const bank = QUESTIONS.find(x => x.id === q.id) || {};   // image et champ « coordonnées » d'une question « carte »
-  $('c-img').hidden = !bank.img;
+  $('c-img').hidden = !bank.img; $('c-img').className = bank.petite ? 'sprite' : 'carte';
   if (bank.img) $('c-img').src = bank.img; else $('c-img').removeAttribute('src');
   const fields = fieldsOf(q);
   if (fields) {
@@ -292,6 +292,9 @@ function renderResults() {
 // Correction automatique (catégorie « Sort de classe ») : le chef écrit, champ par champ, le verdict calculé par js/autosort.js pour chaque joueur,
 // une seule fois par question et sans toucher aux champs qu'il a déjà tranchés. Il peut ensuite modifier chaque verdict avec ✅ / ❌.
 let autoFait = {}, answersPrets = false, verdictsPrets = false;
+// Catégorie Archimonstre : tous les noms possibles de chaque type de question (pour refuser le nom exact d'un autre archimonstre ou monstre).
+const NOMS_ARCHI = {};
+QUESTIONS.filter(q => q.cat === 'Archimonstre').forEach(q => { (NOMS_ARCHI[q.groupe] ??= new Set()); noms2(q.a[0]).forEach(n => NOMS_ARCHI[q.groupe].add(normaliser(n))); });
 function autoCorriger() {
   if (!ctx || !ctx.isHost || index === null || !answersPrets || !verdictsPrets || !expected || autoFait[index]) return;
   const q = list[index];
@@ -321,6 +324,7 @@ function autoCorriger() {
     const r = bk.auto === 'sort' ? corrigerSort(k, saisie, expected[k])
       : bk.verif && bk.verif[k] === 'contient' ? contient(saisie, expected[k])
       : bk.verif && bk.verif[k] === 'proche' ? contientProche(saisie, expected[k])
+      : bk.verif && bk.verif[k] === 'nom2' ? memeNom(saisie, expected[k], NOMS_ARCHI[bk.groupe])
       : bk.verif && bk.verif[k] === 'nombre' ? (nombre(saisie) !== null && nombre(saisie) === nombre(expected[k]))
       : bk.verif && bk.verif[k] === 'types' ? memesTypes(saisie, expected[k]) : undefined;   // undefined : le chef juge (champ descriptif, réponse trop particulière)
     if (r !== undefined) maj[`${index}/${id}/${k}`] = r;

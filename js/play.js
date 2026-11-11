@@ -126,7 +126,7 @@ function openQuestion(i) {
   $('p-pts').textContent = q.pts + ' pt' + (q.pts > 1 ? 's' : '');
   $('p-text').textContent = q.q;
   const src = imageOf(q), img = $('p-img');
-  img.hidden = !src;
+  img.hidden = !src; img.className = (QUESTIONS.find(x => x.id === q.id) || {}).petite ? 'sprite' : 'carte';
   if (src) img.src = src; else img.removeAttribute('src');
   const fields = fieldsOf(q), rank = isRank(q);
   const input = $('p-answer');
